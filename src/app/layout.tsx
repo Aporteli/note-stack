@@ -19,6 +19,9 @@ const sans = Public_Sans({
 export const metadata: Metadata = {
   title: "Note-Stack",
   description: "Boards, lists and cards for work that moves.",
+  icons: {
+    icon: "/Note.svg",
+  },
 };
 
 export default function RootLayout({
