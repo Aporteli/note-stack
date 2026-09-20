@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  boards    Board[]
+  createdAt DateTime @default(now())
+}
+
+model Board {
+  id        String     @id @default(cuid())
+  title     String
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lists     List[]
+  drawings  Drawing[]
+  documents Document[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model List {
+  id        String    @id @default(cuid())
+  title     String
+  boardId   String
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards     Card[]
+  x         Float     @default(24)
+  y         Float     @default(24)
+  trashedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([boardId])
+  @@index([boardId, trashedAt])
+}
+
+model Card {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  listId      String
+  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
+  order       Int
+  dueDate     DateTime?
+  trashedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([listId, order])
+  @@index([listId, trashedAt])
+}
+
+model Drawing {
+  id        String    @id @default(cuid())
+  boardId   String
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  x         Float
+  y         Float
+  w         Float
+  h         Float
+  strokes   String
+  trashedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([boardId])
+  @@index([boardId, trashedAt])
+}
+
+model Document {
+  id        String    @id @default(cuid())
+  boardId   String
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  title     String    @default("Untitled")
+  content   String    @default("{\"text\":\"\",\"strokes\":[]}")
+  x         Float
+  y         Float
+  trashedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([boardId])
+  @@index([boardId, trashedAt])
+}

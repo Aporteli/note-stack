@@ -1,26 +1,402 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   NOTE-STACK — design tokens (Tailwind v4)
+   No tailwind.config.ts needed. Delete it if you are on v4.
+   Palette: orchid #BA4BA5 · coral #F39083 · lagoon #5EB3CA · mint #84D5AA
+            plum #71334E
+   ========================================================================== */
+
+@theme {
+  /* --- palette --- */
+  --color-orchid: #ba4ba5;
+  --color-orchid-100: #f9e8f5;
+  --color-orchid-700: #93327f; /* orchid that passes AA on paper */
+  --color-coral: #f39083;
+  --color-lagoon: #5eb3ca;
+  --color-mint: #84d5aa;
+  --color-plum: #71334e;
+  --color-plum-700: #58283d;
+  --color-plum-900: #2a1220;
+
+  /* --- semantic surfaces --- */
+  --color-paper: #fffdfe;
+  --color-surface: #f4ecf1;
+  --color-surface-sunk: #ece0e9;
+  --color-line: #e5d6e0;
+  --color-line-strong: #d4bece;
+
+  /* --- semantic text --- */
+  --color-ink: #2a1220;
+  --color-ink-soft: #6b4a5c;
+  --color-ink-faint: #957a89;
+  --color-ink-invert: #fffdfe;
+  --color-danger: #c53d3d;
+
+  /* --- type: one display face, one UI face --- */
+  --font-display: var(--font-display-family), ui-sans-serif, system-ui,
+    sans-serif;
+  --font-sans: var(--font-sans-family), ui-sans-serif, system-ui, sans-serif;
+
+  /* A 1.25 scale: board chrome stays quiet, card text stays legible. */
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1rem;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1.125rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.375rem;
+  --text-lead: 1rem;
+  --text-lead--line-height: 1.5rem;
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.65rem;
+  --text-title--letter-spacing: -0.01em;
+  --text-display: 2rem;
+  --text-display--line-height: 2.25rem;
+  --text-display--letter-spacing: -0.025em;
+  --text-hero: 2.75rem;
+  --text-hero--line-height: 2.9rem;
+  --text-hero--letter-spacing: -0.03em;
+
+  /* --- radii: three steps, each with a job --- */
+  --radius-card: 10px; /* an index card */
+  --radius-panel: 16px; /* folders, dialogs */
+  --radius-pill: 999px;
+
+  /* --- elevation: paper lifting off paper, tinted plum not grey --- */
+  --shadow-lift-1: 0 1px 1px rgb(42 18 32 / 0.06), 0 1px 3px rgb(42 18 32 / 0.08);
+  --shadow-lift-2: 0 2px 4px rgb(42 18 32 / 0.08),
+    0 6px 14px rgb(42 18 32 / 0.1);
+  --shadow-lift-3: 0 10px 20px rgb(42 18 32 / 0.14),
+    0 24px 48px rgb(42 18 32 / 0.18);
+
+  --ease-ns: cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+/* Layout constants the components read directly. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --topbar-h: 56px;
+  --list-w: 288px;
+  --fast: 120ms;
+  --base: 180ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* v4 does not generate a width utility from a custom name, so declare it. */
+@utility w-list {
+  width: var(--list-w);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    text-rendering: optimizeLegibility;
+  }
+
+  /* One focus treatment for the whole product. */
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-orchid);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-orchid) 22%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Scrollbars follow the canvas, not the OS. */
+  .ns-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 0.35) transparent;
+  }
+  .ns-scroll::-webkit-scrollbar {
+    height: 12px;
+    width: 12px;
+  }
+  .ns-scroll::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 0.3);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  .ns-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgb(255 255 255 / 0.5);
+    background-clip: content-box;
+  }
+
+  /* --- board canvas: plum, with a faint colour wash --- */
+  .ns-canvas {
+    background-color: var(--color-plum);
+    background-image: radial-gradient(
+        1200px 400px at 12% -10%,
+        rgb(186 75 165 / 0.35),
+        transparent 60%
+      ),
+      radial-gradient(
+        900px 340px at 92% 0%,
+        rgb(94 179 202 / 0.18),
+        transparent 55%
+      );
+  }
+
+  /* --- list = a file folder; the tab carries its colour --- */
+  .ns-folder {
+    width: var(--list-w);
+    background: var(--color-surface);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-lift-2);
+    position: relative;
+  }
+  .ns-folder::before {
+    content: "";
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    top: 0;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    background: var(--tab, var(--color-orchid));
+  }
+
+  /* --- card = an index card --- */
+  .ns-card {
+    background: var(--color-paper);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-lift-1);
+    border: 1px solid var(--color-line);
+    transition: box-shadow var(--base) var(--ease),
+      transform var(--base) var(--ease), border-color var(--base) var(--ease);
+  }
+  .ns-card:hover {
+    box-shadow: var(--shadow-lift-2);
+    border-color: var(--color-line-strong);
+  }
+  .ns-card--dragging {
+    box-shadow: var(--shadow-lift-3);
+    transform: rotate(1.6deg);
+  }
+
+  /* the gap a dragged card will land in */
+  .ns-slot {
+    border: 1px dashed rgb(113 51 78 / 0.35);
+    background: var(--color-surface-sunk);
+    border-radius: var(--radius-card);
+  }
+
+  /* --- buttons --- */
+  .ns-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 36px;
+    padding: 0 0.875rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    transition: background-color var(--fast) var(--ease),
+      color var(--fast) var(--ease), box-shadow var(--fast) var(--ease),
+      opacity var(--fast) var(--ease);
+  }
+  .ns-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .ns-btn--sm {
+    height: 30px;
+    padding: 0 0.625rem;
+    font-size: 0.8125rem;
+  }
+  .ns-btn--lg {
+    height: 44px;
+    padding: 0 1.125rem;
+    font-size: 0.9375rem;
+  }
+
+  .ns-btn--primary {
+    background: var(--color-orchid);
+    color: var(--color-ink-invert);
+    box-shadow: var(--shadow-lift-1);
+  }
+  .ns-btn--primary:hover:not(:disabled) {
+    background: var(--color-orchid-700);
+  }
+  .ns-btn--primary:active:not(:disabled) {
+    box-shadow: none;
+    transform: translateY(1px);
+  }
+
+  .ns-btn--secondary {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border: 1px solid var(--color-line-strong);
+  }
+  .ns-btn--secondary:hover:not(:disabled) {
+    background: var(--color-surface);
+  }
+
+  .ns-btn--ghost {
+    background: transparent;
+    color: var(--color-ink-soft);
+  }
+  .ns-btn--ghost:hover:not(:disabled) {
+    background: rgb(113 51 78 / 0.08);
+    color: var(--color-ink);
+  }
+
+  .ns-btn--onCanvas {
+    background: rgb(255 255 255 / 0.16);
+    color: var(--color-ink-invert);
+    backdrop-filter: blur(6px);
+  }
+  .ns-btn--onCanvas:hover:not(:disabled) {
+    background: rgb(255 255 255 / 0.26);
+  }
+
+  .ns-btn--danger {
+    background: transparent;
+    color: var(--color-danger);
+  }
+  .ns-btn--danger:hover:not(:disabled) {
+    background: rgb(197 61 61 / 0.1);
+  }
+
+  .ns-iconbtn {
+    display: inline-grid;
+    place-items: center;
+    height: 32px;
+    width: 32px;
+    border-radius: 8px;
+    color: var(--color-ink-soft);
+    transition: background-color var(--fast) var(--ease),
+      color var(--fast) var(--ease);
+  }
+  .ns-iconbtn:hover {
+    background: rgb(113 51 78 / 0.08);
+    color: var(--color-ink);
+  }
+
+  /* --- fields --- */
+  .ns-field {
+    width: 100%;
+    background: var(--color-paper);
+    border: 1px solid var(--color-line-strong);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-ink);
+    transition: border-color var(--fast) var(--ease),
+      box-shadow var(--fast) var(--ease);
+  }
+  .ns-field::placeholder {
+    color: var(--color-ink-faint);
+  }
+  .ns-field:focus {
+    outline: none;
+    border-color: var(--color-orchid);
+    box-shadow: 0 0 0 3px rgb(186 75 165 / 0.16);
+  }
+  .ns-field--invalid {
+    border-color: var(--color-danger);
+  }
+  .ns-field--invalid:focus {
+    box-shadow: 0 0 0 3px rgb(197 61 61 / 0.16);
+  }
+
+  /* --- chips / labels --- */
+  .ns-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 22px;
+    padding: 0 0.5rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-plum-900);
+  }
+
+  /* --- overlays --- */
+  .ns-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgb(42 18 32 / 0.55);
+    backdrop-filter: blur(2px);
+    animation: ns-fade var(--base) var(--ease);
+  }
+  .ns-dialog {
+    background: var(--color-paper);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-lift-3);
+    animation: ns-rise var(--base) var(--ease);
+  }
+  .ns-menu {
+    background: var(--color-paper);
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lift-3);
+    padding: 0.375rem;
+    min-width: 200px;
+    animation: ns-rise var(--fast) var(--ease);
+  }
+  .ns-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: var(--color-ink);
+    text-align: left;
+  }
+  .ns-menu-item:hover {
+    background: rgb(186 75 165 / 0.1);
+  }
+
+  .ns-skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-sunk) 25%,
+      var(--color-surface) 37%,
+      var(--color-surface-sunk) 63%
+    );
+    background-size: 400% 100%;
+    animation: ns-shimmer 1.4s ease-in-out infinite;
+    border-radius: 6px;
+  }
+}
+
+@keyframes ns-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ns-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+@keyframes ns-shimmer {
+  to {
+    background-position: -135% 0;
+  }
 }
