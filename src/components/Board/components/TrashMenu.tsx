@@ -308,6 +308,8 @@ export function TrashMenu({ boardId, refreshKey }: Props) {
           document.body,
         )}
 
+
+
       <ConfirmDialog
         open={confirm !== null}
         title={confirmTitle}
