@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   createFlashCard,
   deleteFlashCard,
@@ -36,6 +29,10 @@ const TEXT_SIZES = [
 type TextSize = (typeof TEXT_SIZES)[number]["id"];
 
 const TEXT_SIZE_KEY = "flash-text-size";
+const CARD_WIDTH_KEY = "flash-card-width";
+const CARD_HEIGHT_KEY = "flash-card-height";
+const CARD_WIDTH = { min: 160, max: 640, initial: 320 };
+const CARD_HEIGHT = { min: 140, max: 520, initial: 260 };
 
 function isTextSize(value: string | null): value is TextSize {
   return TEXT_SIZES.some((size) => size.id === value);
@@ -53,38 +50,10 @@ type Draft =
   | { mode: "create" }
   | { mode: "edit"; id: string };
 
-const MIN_CARD = 200;
-const MAX_CARD_HEIGHT = 320;
-
-/** Pack cards into rows that cover the page, keeping each one card-shaped. */
-function pickGrid(width: number, height: number, count: number, gap: number) {
-  const maxCols = Math.max(1, Math.floor((width + gap) / (MIN_CARD + gap)));
-  let best: { columns: number; rowHeight: number; score: number } | null = null;
-
-  for (let columns = 1; columns <= maxCols; columns++) {
-    const rows = Math.ceil(count / columns);
-    const cardWidth = (width - gap * (columns - 1)) / columns;
-    const naturalHeight = (height - gap * (rows - 1)) / rows;
-    if (cardWidth < MIN_CARD || naturalHeight <= 0) continue;
-
-    const rowHeight =
-      naturalHeight < MIN_CARD
-        ? MIN_CARD
-        : Math.min(naturalHeight, MAX_CARD_HEIGHT);
-    const aspect = cardWidth / rowHeight;
-    const overflow =
-      naturalHeight > MAX_CARD_HEIGHT ? naturalHeight - MAX_CARD_HEIGHT : 0;
-    const shortfall = naturalHeight < MIN_CARD ? MIN_CARD - naturalHeight : 0;
-    const leftover = count % columns;
-    const ragged = leftover === 0 ? 0 : (columns - leftover) / columns;
-    const score =
-      Math.abs(aspect - 1.15) + (overflow + shortfall) / 80 + ragged * 0.55;
-
-    if (!best || score < best.score) best = { columns, rowHeight, score };
-  }
-
-  if (!best) return { columns: maxCols, rowHeight: MIN_CARD };
-  return { columns: best.columns, rowHeight: Math.round(best.rowHeight) };
+function clampSize(value: string | null, min: number, max: number) {
+  const next = Number(value);
+  if (!Number.isFinite(next)) return null;
+  return Math.min(max, Math.max(min, Math.round(next)));
 }
 
 function orderedCards(cards: FlashCardData[], order: string[] | null) {
@@ -114,6 +83,73 @@ function shuffleIds(ids: string[]) {
   return next;
 }
 
+function CardSizeControl({
+  width,
+  height,
+  onWidth,
+  onHeight,
+}: {
+  width: number;
+  height: number;
+  onWidth: (next: number) => void;
+  onHeight: (next: number) => void;
+}) {
+  return (
+    <div
+      className="flex items-center gap-3 rounded-lg border border-line bg-paper px-3 py-1.5"
+      role="group"
+      aria-label="Card size"
+    >
+      <SizeSlider
+        label="Width"
+        value={width}
+        min={CARD_WIDTH.min}
+        max={CARD_WIDTH.max}
+        onChange={onWidth}
+      />
+      <SizeSlider
+        label="Height"
+        value={height}
+        min={CARD_HEIGHT.min}
+        max={CARD_HEIGHT.max}
+        onChange={onHeight}
+      />
+    </div>
+  );
+}
+
+function SizeSlider({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (next: number) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-meta font-medium text-ink-soft">
+      <span className="w-11">{label}</span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={10}
+        value={value}
+        aria-valuetext={`${value} pixels`}
+        aria-label={`Card ${label.toLowerCase()}`}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="h-1 w-24 cursor-pointer accent-orchid"
+      />
+      <span className="w-8 tabular-nums text-ink">{value}</span>
+    </label>
+  );
+}
+
 export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [front, setFront] = useState("");
@@ -123,50 +159,45 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
     null,
   );
   const [isPending, startTransition] = useTransition();
-  const frameRef = useRef<HTMLDivElement>(null);
-  const [grid, setGrid] = useState({ columns: 4, rowHeight: 220 });
   const [order, setOrder] = useState<string[] | null>(null);
   const [shuffleEpoch, setShuffleEpoch] = useState(0);
   const [textSize, setTextSize] = useState<TextSize>("md");
+  const [cardWidth, setCardWidth] = useState(CARD_WIDTH.initial);
+  const [cardHeight, setCardHeight] = useState(CARD_HEIGHT.initial);
 
   useEffect(() => {
     const saved = localStorage.getItem(TEXT_SIZE_KEY);
     if (isTextSize(saved)) setTextSize(saved);
+    const width = clampSize(
+      localStorage.getItem(CARD_WIDTH_KEY),
+      CARD_WIDTH.min,
+      CARD_WIDTH.max,
+    );
+    const height = clampSize(
+      localStorage.getItem(CARD_HEIGHT_KEY),
+      CARD_HEIGHT.min,
+      CARD_HEIGHT.max,
+    );
+    if (width) setCardWidth(width);
+    if (height) setCardHeight(height);
   }, []);
 
   function chooseTextSize(next: TextSize) {
     setTextSize(next);
     localStorage.setItem(TEXT_SIZE_KEY, next);
   }
+
+  function chooseCardWidth(next: number) {
+    setCardWidth(next);
+    localStorage.setItem(CARD_WIDTH_KEY, String(next));
+  }
+
+  function chooseCardHeight(next: number) {
+    setCardHeight(next);
+    localStorage.setItem(CARD_HEIGHT_KEY, String(next));
+  }
+
   const deck = useMemo(() => orderedCards(cards, order), [cards, order]);
-
-  useLayoutEffect(() => {
-    const frame = frameRef.current;
-    if (!frame || cards.length === 0) return;
-
-    const measure = () => {
-      const style = getComputedStyle(frame);
-      const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-      const padY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
-      const gap = parseFloat(style.columnGap || style.gap) || 16;
-      const next = pickGrid(
-        frame.clientWidth - padX,
-        frame.clientHeight - padY,
-        cards.length,
-        gap,
-      );
-      setGrid((current) =>
-        current.columns === next.columns && current.rowHeight === next.rowHeight
-          ? current
-          : next,
-      );
-    };
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(frame);
-    return () => observer.disconnect();
-  }, [cards.length]);
 
   function openCreate() {
     setFront("");
@@ -240,6 +271,12 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <CardSizeControl
+            width={cardWidth}
+            height={cardHeight}
+            onWidth={chooseCardWidth}
+            onHeight={chooseCardHeight}
+          />
           <div
             className="flex items-center rounded-lg border border-line bg-paper p-0.5"
             role="group"
@@ -287,10 +324,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
         </div>
       </div>
 
-      <div
-        ref={frameRef}
-        className="flash-scroll min-h-0 flex-1 overflow-y-auto p-3 sm:p-5"
-      >
+      <div className="flash-scroll min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
         {cards.length === 0 ? (
           <div className="grid min-h-full place-items-center">
             <div className="w-full max-w-lg">
@@ -310,8 +344,8 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
           <ul
             className="grid gap-4"
             style={{
-              gridTemplateColumns: `repeat(${grid.columns}, minmax(0, 1fr))`,
-              gridAutoRows: `${grid.rowHeight}px`,
+              gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${cardWidth}px), ${cardWidth}px))`,
+              gridAutoRows: `${cardHeight}px`,
             }}
           >
             {deck.map((card, index) => (
