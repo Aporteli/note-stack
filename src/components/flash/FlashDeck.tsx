@@ -420,38 +420,58 @@ function FlipCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const [flipped, setFlipped] = useState(false);
+  const [showBack, setShowBack] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "out" | "in">("idle");
+
+  function flip() {
+    if (phase !== "idle") return;
+    setPhase("out");
+  }
+
+  function handleAnimationEnd(event: React.AnimationEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return;
+    if (event.animationName === "flash-out") {
+      setShowBack((value) => !value);
+      setPhase("in");
+    } else if (event.animationName === "flash-in") {
+      setPhase("idle");
+    }
+  }
 
   return (
     <div className="group relative h-full">
       <div
         role="button"
         tabIndex={0}
-        aria-pressed={flipped}
-        onClick={() => setFlipped((value) => !value)}
+        aria-pressed={showBack}
+        onClick={flip}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            setFlipped((value) => !value);
+            flip();
           }
         }}
         className="flash-scene"
       >
-        <div className={`flash-inner ${flipped ? "is-flipped" : ""}`}>
-          <div className="flash-face flash-face-front" aria-hidden={flipped}>
+        <div
+          className={`flash-turn${phase === "out" ? " is-out" : ""}${
+            phase === "in" ? " is-in" : ""
+          }`}
+          onAnimationEnd={handleAnimationEnd}
+        >
+          <div
+            className={`flash-face ${
+              showBack ? "flash-face-back" : "flash-face-front"
+            }`}
+          >
             <span className="flash-stripe" style={{ background: stripe }} />
             <span className="flash-kicker"></span>
-            <span className="flash-copy">{card.front}</span>
-          </div>
-          <div className="flash-face flash-face-back" aria-hidden={!flipped}>
-            <span className="flash-stripe" style={{ background: stripe }} />
-            <span className="flash-kicker"></span>
-            <span className="flash-copy">{card.back}</span>
+            <span className="flash-copy">{showBack ? card.back : card.front}</span>
           </div>
         </div>
       </div>
 
-      {!flipped && (
+      {phase === "idle" && !showBack && (
         <div className="flash-actions absolute right-2 top-3 z-10 flex gap-1 transition-opacity">
           <button
             type="button"

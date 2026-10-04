@@ -397,45 +397,54 @@
     border-radius: var(--radius-panel);
   }
 
-  .flash-inner {
-    position: relative;
-    width: 100%;
+  .flash-turn {
     height: 100%;
-    border-radius: inherit;
-    transform-style: preserve-3d;
-    transition: transform 560ms var(--ease-ns);
+    width: 100%;
+    transform: rotateY(0deg);
   }
 
-  .flash-inner.is-flipped {
-    transform: rotateY(180deg);
+  .flash-turn.is-out {
+    animation: flash-out 160ms cubic-bezier(0.4, 0, 1, 1) forwards;
+    will-change: transform;
+  }
+
+  .flash-turn.is-in {
+    animation: flash-in 200ms cubic-bezier(0, 0, 0.2, 1) forwards;
+    will-change: transform;
+  }
+
+  .flash-turn.is-out .flash-copy,
+  .flash-turn.is-in .flash-copy {
+    overflow: hidden;
   }
 
   .flash-face {
-    position: absolute;
-    inset: 0;
     display: flex;
+    height: 100%;
+    width: 100%;
     flex-direction: column;
     overflow: hidden;
     border-radius: inherit;
     border: 1px solid var(--color-line);
     box-shadow: var(--shadow-lift-2);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
   }
 
   .flash-face-front {
     background: var(--color-paper);
-    transform: rotateY(0deg);
   }
 
   .flash-face-back {
     background: var(--color-orchid-100);
-    transform: rotateY(180deg);
   }
 
   .flash-scene:hover .flash-face,
   .flash-scene:focus-visible .flash-face {
     box-shadow: var(--shadow-lift-3);
+  }
+
+  .flash-turn.is-out .flash-face,
+  .flash-turn.is-in .flash-face {
+    box-shadow: var(--shadow-lift-2);
   }
 
   .flash-stripe {
@@ -535,6 +544,24 @@
     .group:focus-within .flash-actions {
       opacity: 1;
     }
+  }
+}
+
+@keyframes flash-out {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(90deg);
+  }
+}
+
+@keyframes flash-in {
+  from {
+    transform: rotateY(-90deg);
+  }
+  to {
+    transform: rotateY(0deg);
   }
 }
 
