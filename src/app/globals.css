@@ -382,6 +382,160 @@
     animation: ns-shimmer 1.4s ease-in-out infinite;
     border-radius: 6px;
   }
+
+  /* --- flash cards: a real flip, front painted, back waiting at 180° --- */
+  .flash-scene {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    perspective: 1200px;
+    border-radius: var(--radius-panel);
+  }
+
+  .flash-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    transform-style: preserve-3d;
+    transition: transform 560ms var(--ease-ns);
+  }
+
+  .flash-inner.is-flipped {
+    transform: rotateY(180deg);
+  }
+
+  .flash-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: inherit;
+    border: 1px solid var(--color-line);
+    box-shadow: var(--shadow-lift-2);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .flash-face-front {
+    background: var(--color-paper);
+    transform: rotateY(0deg);
+  }
+
+  .flash-face-back {
+    background: var(--color-orchid-100);
+    transform: rotateY(180deg);
+  }
+
+  .flash-scene:hover .flash-face,
+  .flash-scene:focus-visible .flash-face {
+    box-shadow: var(--shadow-lift-3);
+  }
+
+  .flash-stripe {
+    height: 8px;
+    flex: none;
+  }
+
+  .flash-kicker {
+    flex: none;
+    padding: 0.7rem 4.75rem 0 1rem;
+    font-size: var(--text-micro);
+    line-height: var(--text-micro--line-height);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .flash-deck .ns-scroll {
+    scrollbar-width: auto;
+  }
+
+  .flash-scroll::-webkit-scrollbar,
+  .flash-copy::-webkit-scrollbar,
+  .flash-deck .ns-scroll::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+
+  .flash-scroll::-webkit-scrollbar-track,
+  .flash-copy::-webkit-scrollbar-track,
+  .flash-deck .ns-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .flash-scroll::-webkit-scrollbar-thumb,
+  .flash-copy::-webkit-scrollbar-thumb,
+  .flash-deck .ns-scroll::-webkit-scrollbar-thumb {
+    background: rgb(113 51 78 / 0.4);
+    border-radius: 999px;
+  }
+
+  .flash-scroll::-webkit-scrollbar-thumb:hover,
+  .flash-copy::-webkit-scrollbar-thumb:hover,
+  .flash-deck .ns-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgb(113 51 78 / 0.7);
+  }
+
+  .flash-copy {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 0.35rem 1rem 0.5rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    line-height: 1.45;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .flash-deck[data-size="sm"] .flash-copy,
+  .flash-deck[data-size="sm"] .flash-field {
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+
+  .flash-deck[data-size="lg"] .flash-copy,
+  .flash-deck[data-size="lg"] .flash-field {
+    font-size: 1.5rem;
+    line-height: 1.35;
+  }
+
+  .flash-deck[data-size="xl"] .flash-copy,
+  .flash-deck[data-size="xl"] .flash-field {
+    font-size: 2.125rem;
+    line-height: 1.25;
+  }
+
+  .flash-hint {
+    flex: none;
+    padding: 0 1rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--color-ink-faint);
+  }
+
+  .flash-actions {
+    opacity: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .flash-actions {
+      opacity: 0;
+    }
+    .group:hover .flash-actions,
+    .group:focus-within .flash-actions {
+      opacity: 1;
+    }
+  }
 }
 
 @keyframes ns-fade {

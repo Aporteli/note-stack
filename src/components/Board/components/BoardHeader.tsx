@@ -84,6 +84,20 @@ export function BoardHeader({
           <span className="hidden sm:inline">Boards</span>
         </Link>
 
+        <Link
+          href="/flash-cards"
+          className="
+            flex h-9 items-center rounded-lg px-2.5
+            text-sm font-medium text-slate-500
+            transition-colors
+            hover:bg-slate-100 hover:text-slate-900
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/60
+          "
+        >
+          <span className="sm:hidden">Cards</span>
+          <span className="hidden sm:inline">Flash cards</span>
+        </Link>
+
         <span aria-hidden className="h-5 w-px bg-slate-200" />
 
         <h1

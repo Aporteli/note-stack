@@ -32,6 +32,15 @@ export const IconPlus = (p: IconProps) => (
   </Svg>
 );
 
+export const IconShuffle = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3.5 6h2.4c1.2 0 2 .6 3 2.1L11.6 12c1 1.5 1.8 2.1 3 2.1H16.5" />
+    <path d="M14.4 12.2 16.5 14.1 14.4 16" />
+    <path d="M3.5 14h2.4c1.2 0 2-.6 3-2.1L11.6 8c1-1.5 1.8-2.1 3-2.1H16.5" />
+    <path d="M14.4 7.8 16.5 5.9 14.4 4" />
+  </Svg>
+);
+
 export const IconClose = (p: IconProps) => (
   <Svg {...p}>
     <path d="M5.5 5.5l9 9M14.5 5.5l-9 9" />
