@@ -66,6 +66,25 @@ export const IconBack = (p: IconProps) => (
   </Svg>
 );
 
+export const IconForward = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M8 4.5L13.5 10 8 15.5" />
+  </Svg>
+);
+
+export const IconGrid = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4.5 4.5h4.25v4.25H4.5zM11.25 4.5H15.5v4.25h-4.25zM4.5 11.25h4.25V15.5H4.5zM11.25 11.25H15.5V15.5h-4.25z" />
+  </Svg>
+);
+
+export const IconCard = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4.5 5.5h11v9h-11z" />
+    <path d="M4.5 8h11" />
+  </Svg>
+);
+
 export const IconStack = (p: IconProps) => (
   <Svg {...p}>
     <path d="M10 2.75l6.5 3.25L10 9.25 3.5 6l6.5-3.25z" />
