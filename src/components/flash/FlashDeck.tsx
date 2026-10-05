@@ -365,12 +365,14 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
             aria-label="Search cards"
             className="w-full sm:w-52"
           />
-          <CardSizeControl
-            width={cardWidth}
-            height={cardHeight}
-            onWidth={chooseCardWidth}
-            onHeight={chooseCardHeight}
-          />
+          {layout === "grid" && (
+            <CardSizeControl
+              width={cardWidth}
+              height={cardHeight}
+              onWidth={chooseCardWidth}
+              onHeight={chooseCardHeight}
+            />
+          )}
           <div className="flex flex-wrap items-center gap-2">
           <div
             className="flex items-center rounded-lg border border-line bg-paper p-0.5"
@@ -471,13 +473,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
           </div>
         ) : layout === "focus" && activeCard ? (
           <div className="flex min-h-full flex-col items-center justify-center gap-5 py-4">
-            <div
-              className="max-w-full"
-              style={{
-                width: cardWidth,
-                height: cardHeight,
-              }}
-            >
+            <div className="h-[min(24rem,55dvh)] w-full max-w-xl">
               <FlipCard
                 key={`${activeCard.id}-${shuffleEpoch}`}
                 card={activeCard}
