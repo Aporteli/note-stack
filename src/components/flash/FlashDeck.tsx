@@ -9,7 +9,7 @@ import {
 import { ConfirmDialog } from "@/components/Board/components/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/Feedback";
-import { Field, Textarea } from "@/components/ui/Field";
+import { Field, SearchField, Textarea } from "@/components/ui/Field";
 import { IconPencil, IconPlus, IconShuffle, IconTrash } from "@/components/ui/Icons";
 import { Modal } from "@/components/ui/Overlay";
 
@@ -164,6 +164,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
   const [textSize, setTextSize] = useState<TextSize>("md");
   const [cardWidth, setCardWidth] = useState(CARD_WIDTH.initial);
   const [cardHeight, setCardHeight] = useState(CARD_HEIGHT.initial);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     const saved = localStorage.getItem(TEXT_SIZE_KEY);
@@ -198,6 +199,15 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
   }
 
   const deck = useMemo(() => orderedCards(cards, order), [cards, order]);
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return deck;
+    return deck.filter(
+      (card) =>
+        card.front.toLowerCase().includes(needle) ||
+        card.back.toLowerCase().includes(needle),
+    );
+  }, [deck, query]);
 
   function openCreate() {
     setFront("");
@@ -241,7 +251,11 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
   }
 
   function shuffleDeck() {
-    setOrder(shuffleIds(deck.map((card) => card.id)));
+    const matching = new Set(visible.map((card) => card.id));
+    const queue = shuffleIds([...matching]);
+    setOrder(
+      deck.map((card) => (matching.has(card.id) ? queue.shift()! : card.id)),
+    );
     setShuffleEpoch((epoch) => epoch + 1);
   }
 
@@ -267,10 +281,19 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
           <p className="truncate text-sm text-ink-soft">
             {cards.length === 0
               ? "Write both sides, then click a card to flip it."
-              : `${cards.length} ${cards.length === 1 ? "card" : "cards"} · click any card to flip it`}
+              : query.trim()
+                ? `${visible.length} of ${cards.length} ${cards.length === 1 ? "card" : "cards"}`
+                : `${cards.length} ${cards.length === 1 ? "card" : "cards"} · click any card to flip it`}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <SearchField
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search cards"
+            aria-label="Search cards"
+            className="w-52"
+          />
           <CardSizeControl
             width={cardWidth}
             height={cardHeight}
@@ -312,7 +335,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
             type="button"
             variant="secondary"
             onClick={shuffleDeck}
-            disabled={cards.length < 2}
+            disabled={visible.length < 2}
           >
             <IconShuffle size={18} />
             Shuffle
@@ -340,6 +363,15 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
               />
             </div>
           </div>
+        ) : visible.length === 0 ? (
+          <div className="grid min-h-full place-items-center">
+            <div className="w-full max-w-lg">
+              <EmptyState
+                title="No matching cards"
+                body="Nothing on the front or the back includes that search."
+              />
+            </div>
+          </div>
         ) : (
           <ul
             className="grid gap-4"
@@ -348,7 +380,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
               gridAutoRows: `${cardHeight}px`,
             }}
           >
-            {deck.map((card, index) => (
+            {visible.map((card, index) => (
               <li key={`${card.id}-${shuffleEpoch}`} className="min-h-0">
                 <FlipCard
                   card={card}
