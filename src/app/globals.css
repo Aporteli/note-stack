@@ -541,7 +541,7 @@
       opacity: 0;
     }
     .group:hover .flash-actions,
-    .group:focus-within .flash-actions {
+    .flash-actions:focus-within {
       opacity: 1;
     }
   }
