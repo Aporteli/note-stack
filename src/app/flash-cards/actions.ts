@@ -44,21 +44,25 @@ export async function getFlashCards() {
   });
 }
 
-export async function getRandomFlashCard(excludeId?: string) {
+export async function getRandomFlashCard(
+  excludeIds: string[] = [],
+  allowRepeat = true,
+) {
   const user = await prisma.user.findFirst({
     orderBy: { createdAt: "asc" },
     select: { id: true },
   });
   if (!user) return null;
 
+  const unique = [...new Set(excludeIds.filter(Boolean))];
   const where = {
     userId: user.id,
-    ...(excludeId ? { id: { not: excludeId } } : {}),
+    ...(unique.length ? { id: { notIn: unique } } : {}),
   };
 
   let count = await prisma.flashCard.count({ where });
   let filter = where;
-  if (count === 0 && excludeId) {
+  if (count === 0 && allowRepeat && unique.length > 0) {
     filter = { userId: user.id };
     count = await prisma.flashCard.count({ where: filter });
   }

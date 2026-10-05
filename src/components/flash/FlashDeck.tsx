@@ -34,6 +34,7 @@ const LAYOUT_KEY = "flash-layout";
 const CARD_WIDTH_KEY = "flash-card-width";
 const CARD_HEIGHT_KEY = "flash-card-height";
 type Layout = "grid" | "random";
+type DrawMode = "repeat" | "once";
 const CARD_WIDTH = { min: 160, max: 640, initial: 320 };
 const CARD_HEIGHT = { min: 140, max: 520, initial: 260 };
 
@@ -169,7 +170,10 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
   const [cardHeight, setCardHeight] = useState(CARD_HEIGHT.initial);
   const [query, setQuery] = useState("");
   const [layout, setLayout] = useState<Layout>("grid");
+  const [drawMode, setDrawMode] = useState<DrawMode>("repeat");
   const [randomCard, setRandomCard] = useState<FlashCardData | null>(null);
+  const [seenIds, setSeenIds] = useState<string[]>([]);
+  const [uniqueDone, setUniqueDone] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(TEXT_SIZE_KEY);
@@ -212,10 +216,37 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
     localStorage.setItem(LAYOUT_KEY, next);
   }
 
-  function drawRandomCard(excludeId?: string) {
+  function chooseDrawMode(next: DrawMode) {
+    setDrawMode(next);
+    setUniqueDone(false);
+    if (next === "once") {
+      setSeenIds(randomCard ? [randomCard.id] : []);
+    } else {
+      setSeenIds([]);
+    }
+  }
+
+  function drawRandomCard() {
     startTransition(async () => {
-      const next = await getRandomFlashCard(excludeId);
+      const exclude =
+        drawMode === "once"
+          ? seenIds
+          : randomCard
+            ? [randomCard.id]
+            : [];
+      const next = await getRandomFlashCard(exclude, drawMode === "repeat");
+      if (!next) {
+        if (drawMode === "once") {
+          setRandomCard(null);
+          setUniqueDone(true);
+        }
+        return;
+      }
+      setUniqueDone(false);
       setRandomCard(next);
+      if (drawMode === "once") {
+        setSeenIds((ids) => (ids.includes(next.id) ? ids : [...ids, next.id]));
+      }
     });
   }
 
@@ -223,8 +254,11 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
     if (layout !== "random") return;
     if (cards.length === 0) {
       setRandomCard(null);
+      setUniqueDone(false);
+      setSeenIds([]);
       return;
     }
+    if (uniqueDone) return;
     const shown = randomCard;
     const fresh = shown
       ? cards.find((card) => card.id === shown.id)
@@ -355,6 +389,34 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
               One card
             </button>
           </div>
+          {layout === "random" && (
+            <div
+              className="flex items-center rounded-lg border border-line bg-paper p-0.5"
+              role="group"
+              aria-label="Random draw mode"
+            >
+              <button
+                type="button"
+                aria-pressed={drawMode === "repeat"}
+                onClick={() => chooseDrawMode("repeat")}
+                className={`h-8 rounded-md px-2.5 text-meta font-medium ${
+                  drawMode === "repeat" ? "bg-surface text-ink" : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                Can repeat
+              </button>
+              <button
+                type="button"
+                aria-pressed={drawMode === "once"}
+                onClick={() => chooseDrawMode("once")}
+                className={`h-8 rounded-md px-2.5 text-meta font-medium ${
+                  drawMode === "once" ? "bg-surface text-ink" : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                Each once
+              </button>
+            </div>
+          )}
           {layout === "grid" && (
             <SearchField
               value={query}
@@ -416,8 +478,8 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
             <Button
               type="button"
               variant="secondary"
-              onClick={() => drawRandomCard(randomCard?.id)}
-              disabled={cards.length === 0 || isPending}
+              onClick={() => drawRandomCard()}
+              disabled={cards.length === 0 || isPending || uniqueDone}
             >
               <IconStack size={18} />
               New random card
@@ -449,7 +511,14 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
           </div>
         ) : layout === "random" ? (
           <div className="grid min-h-full place-items-center p-4">
-            {randomCard ? (
+            {uniqueDone ? (
+              <div className="w-full max-w-lg">
+                <EmptyState
+                  title="No more cards"
+                  body="Every card has been shown once. Refresh the page to start a new random round."
+                />
+              </div>
+            ) : randomCard ? (
               <div
                 className="w-full"
                 style={{
