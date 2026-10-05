@@ -204,8 +204,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
     if (!needle) return deck;
     return deck.filter(
       (card) =>
-        card.front.toLowerCase().includes(needle) ||
-        card.back.toLowerCase().includes(needle),
+        card.front.toLowerCase().includes(needle),
     );
   }, [deck, query]);
 
@@ -368,7 +367,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
             <div className="w-full max-w-lg">
               <EmptyState
                 title="No matching cards"
-                body="Nothing on the front or the back includes that search."
+                body="Nothing on the front of a card includes that search."
               />
             </div>
           </div>
