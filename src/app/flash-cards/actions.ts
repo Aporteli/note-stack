@@ -44,6 +44,37 @@ export async function getFlashCards() {
   });
 }
 
+export async function getRandomFlashCard(excludeId?: string) {
+  const user = await prisma.user.findFirst({
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+  if (!user) return null;
+
+  const where = {
+    userId: user.id,
+    ...(excludeId ? { id: { not: excludeId } } : {}),
+  };
+
+  let count = await prisma.flashCard.count({ where });
+  let filter = where;
+  if (count === 0 && excludeId) {
+    filter = { userId: user.id };
+    count = await prisma.flashCard.count({ where: filter });
+  }
+  if (count === 0) return null;
+
+  const skip = Math.floor(Math.random() * count);
+  const [card] = await prisma.flashCard.findMany({
+    where: filter,
+    skip,
+    take: 1,
+    orderBy: { id: "asc" },
+    select: { id: true, front: true, back: true },
+  });
+  return card ?? null;
+}
+
 export async function createFlashCard(front: string, back: string) {
   const cleaned = sides(front, back);
   if (!cleaned.ok) return cleaned;

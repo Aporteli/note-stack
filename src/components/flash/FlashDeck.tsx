@@ -4,13 +4,14 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   createFlashCard,
   deleteFlashCard,
+  getRandomFlashCard,
   updateFlashCard,
 } from "@/app/flash-cards/actions";
 import { ConfirmDialog } from "@/components/Board/components/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/Feedback";
 import { Field, SearchField, Textarea } from "@/components/ui/Field";
-import { IconPencil, IconPlus, IconShuffle, IconTrash } from "@/components/ui/Icons";
+import { IconPencil, IconPlus, IconShuffle, IconStack, IconTrash } from "@/components/ui/Icons";
 import { Modal } from "@/components/ui/Overlay";
 
 export type FlashCardData = {
@@ -29,8 +30,10 @@ const TEXT_SIZES = [
 type TextSize = (typeof TEXT_SIZES)[number]["id"];
 
 const TEXT_SIZE_KEY = "flash-text-size";
+const LAYOUT_KEY = "flash-layout";
 const CARD_WIDTH_KEY = "flash-card-width";
 const CARD_HEIGHT_KEY = "flash-card-height";
+type Layout = "grid" | "random";
 const CARD_WIDTH = { min: 160, max: 640, initial: 320 };
 const CARD_HEIGHT = { min: 140, max: 520, initial: 260 };
 
@@ -165,10 +168,16 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
   const [cardWidth, setCardWidth] = useState(CARD_WIDTH.initial);
   const [cardHeight, setCardHeight] = useState(CARD_HEIGHT.initial);
   const [query, setQuery] = useState("");
+  const [layout, setLayout] = useState<Layout>("grid");
+  const [randomCard, setRandomCard] = useState<FlashCardData | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(TEXT_SIZE_KEY);
     if (isTextSize(saved)) setTextSize(saved);
+    const savedLayout = localStorage.getItem(LAYOUT_KEY);
+    if (savedLayout === "grid" || savedLayout === "random") {
+      setLayout(savedLayout);
+    }
     const width = clampSize(
       localStorage.getItem(CARD_WIDTH_KEY),
       CARD_WIDTH.min,
@@ -197,6 +206,38 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
     setCardHeight(next);
     localStorage.setItem(CARD_HEIGHT_KEY, String(next));
   }
+
+  function chooseLayout(next: Layout) {
+    setLayout(next);
+    localStorage.setItem(LAYOUT_KEY, next);
+  }
+
+  function drawRandomCard(excludeId?: string) {
+    startTransition(async () => {
+      const next = await getRandomFlashCard(excludeId);
+      setRandomCard(next);
+    });
+  }
+
+  useEffect(() => {
+    if (layout !== "random") return;
+    if (cards.length === 0) {
+      setRandomCard(null);
+      return;
+    }
+    const shown = randomCard;
+    const fresh = shown
+      ? cards.find((card) => card.id === shown.id)
+      : undefined;
+    if (fresh && shown) {
+      if (fresh.front !== shown.front || fresh.back !== shown.back) {
+        setRandomCard(fresh);
+      }
+      return;
+    }
+    drawRandomCard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- draw when entering random view or the shown card is gone
+  }, [layout, cards]);
 
   const deck = useMemo(() => orderedCards(cards, order), [cards, order]);
   const visible = useMemo(() => {
@@ -280,19 +321,49 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
           <p className="truncate text-sm text-ink-soft">
             {cards.length === 0
               ? "Write both sides, then click a card to flip it."
-              : query.trim()
-                ? `${visible.length} of ${cards.length} ${cards.length === 1 ? "card" : "cards"}`
-                : `${cards.length} ${cards.length === 1 ? "card" : "cards"} · click any card to flip it`}
+              : layout === "random"
+                ? "One card at a time · draw a new one from the database"
+                : query.trim()
+                  ? `${visible.length} of ${cards.length} ${cards.length === 1 ? "card" : "cards"}`
+                  : `${cards.length} ${cards.length === 1 ? "card" : "cards"} · click any card to flip it`}
           </p>
         </div>
         <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:w-auto lg:justify-end">
-          <SearchField
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search cards"
-            aria-label="Search cards"
-            className="w-full sm:w-52"
-          />
+          <div
+            className="flex items-center rounded-lg border border-line bg-paper p-0.5"
+            role="group"
+            aria-label="Page layout"
+          >
+            <button
+              type="button"
+              aria-pressed={layout === "grid"}
+              onClick={() => chooseLayout("grid")}
+              className={`h-8 rounded-md px-2.5 text-meta font-medium ${
+                layout === "grid" ? "bg-surface text-ink" : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              All cards
+            </button>
+            <button
+              type="button"
+              aria-pressed={layout === "random"}
+              onClick={() => chooseLayout("random")}
+              className={`h-8 rounded-md px-2.5 text-meta font-medium ${
+                layout === "random" ? "bg-surface text-ink" : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              One card
+            </button>
+          </div>
+          {layout === "grid" && (
+            <SearchField
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search cards"
+              aria-label="Search cards"
+              className="w-full sm:w-52"
+            />
+          )}
           <CardSizeControl
             width={cardWidth}
             height={cardHeight}
@@ -331,15 +402,27 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
               </button>
             ))}
           </div>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={shuffleDeck}
-            disabled={visible.length < 2}
-          >
-            <IconShuffle size={18} />
-            Shuffle
-          </Button>
+          {layout === "grid" ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={shuffleDeck}
+              disabled={visible.length < 2}
+            >
+              <IconShuffle size={18} />
+              Shuffle
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => drawRandomCard(randomCard?.id)}
+              disabled={cards.length === 0 || isPending}
+            >
+              <IconStack size={18} />
+              New random card
+            </Button>
+          )}
           <Button type="button" variant="primary" onClick={openCreate}>
             <IconPlus size={18} />
             New card
@@ -363,6 +446,28 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
                 }
               />
             </div>
+          </div>
+        ) : layout === "random" ? (
+          <div className="grid min-h-full place-items-center p-4">
+            {randomCard ? (
+              <div
+                className="w-full"
+                style={{
+                  maxWidth: cardWidth,
+                  height: cardHeight,
+                }}
+              >
+                <FlipCard
+                  key={randomCard.id}
+                  card={randomCard}
+                  stripe={STRIPES[0]}
+                  onEdit={() => openEdit(randomCard)}
+                  onDelete={() => setPendingDelete(randomCard)}
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-ink-soft">Picking a card…</p>
+            )}
           </div>
         ) : visible.length === 0 ? (
           <div className="grid min-h-full place-items-center">
