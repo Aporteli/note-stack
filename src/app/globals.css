@@ -541,7 +541,8 @@
       opacity: 0;
     }
     .group:hover .flash-actions,
-    .group:focus-within .flash-actions {
+    .group:focus-within .flash-actions,
+    .flash-deck[data-layout="focus"] .flash-actions {
       opacity: 1;
     }
   }

@@ -10,7 +10,16 @@ import { ConfirmDialog } from "@/components/Board/components/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/Feedback";
 import { Field, SearchField, Textarea } from "@/components/ui/Field";
-import { IconPencil, IconPlus, IconShuffle, IconTrash } from "@/components/ui/Icons";
+import {
+  IconBack,
+  IconCardOne,
+  IconChevronRight,
+  IconGrid,
+  IconPencil,
+  IconPlus,
+  IconShuffle,
+  IconTrash,
+} from "@/components/ui/Icons";
 import { Modal } from "@/components/ui/Overlay";
 
 export type FlashCardData = {
@@ -27,15 +36,21 @@ const TEXT_SIZES = [
 ] as const;
 
 type TextSize = (typeof TEXT_SIZES)[number]["id"];
+type LayoutMode = "grid" | "focus";
 
 const TEXT_SIZE_KEY = "flash-text-size";
 const CARD_WIDTH_KEY = "flash-card-width";
 const CARD_HEIGHT_KEY = "flash-card-height";
+const LAYOUT_KEY = "flash-layout";
 const CARD_WIDTH = { min: 160, max: 640, initial: 320 };
 const CARD_HEIGHT = { min: 140, max: 520, initial: 260 };
 
 function isTextSize(value: string | null): value is TextSize {
   return TEXT_SIZES.some((size) => size.id === value);
+}
+
+function isLayoutMode(value: string | null): value is LayoutMode {
+  return value === "grid" || value === "focus";
 }
 
 const STRIPES = [
@@ -164,11 +179,15 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
   const [textSize, setTextSize] = useState<TextSize>("md");
   const [cardWidth, setCardWidth] = useState(CARD_WIDTH.initial);
   const [cardHeight, setCardHeight] = useState(CARD_HEIGHT.initial);
+  const [layout, setLayout] = useState<LayoutMode>("grid");
+  const [focusIndex, setFocusIndex] = useState(0);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
     const saved = localStorage.getItem(TEXT_SIZE_KEY);
     if (isTextSize(saved)) setTextSize(saved);
+    const savedLayout = localStorage.getItem(LAYOUT_KEY);
+    if (isLayoutMode(savedLayout)) setLayout(savedLayout);
     const width = clampSize(
       localStorage.getItem(CARD_WIDTH_KEY),
       CARD_WIDTH.min,
@@ -186,6 +205,11 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
   function chooseTextSize(next: TextSize) {
     setTextSize(next);
     localStorage.setItem(TEXT_SIZE_KEY, next);
+  }
+
+  function chooseLayout(next: LayoutMode) {
+    setLayout(next);
+    localStorage.setItem(LAYOUT_KEY, next);
   }
 
   function chooseCardWidth(next: number) {
@@ -207,6 +231,48 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
         card.front.toLowerCase().includes(needle),
     );
   }, [deck, query]);
+
+  useEffect(() => {
+    setFocusIndex((index) => {
+      if (visible.length === 0) return 0;
+      return Math.min(index, visible.length - 1);
+    });
+  }, [visible]);
+
+  const focused = visible[focusIndex] ?? null;
+
+  function goFocus(delta: number) {
+    if (visible.length < 2) return;
+    setFocusIndex(
+      (index) => (index + delta + visible.length) % visible.length,
+    );
+  }
+
+  useEffect(() => {
+    if (layout !== "focus") return;
+    const count = visible.length;
+
+    function onKey(event: KeyboardEvent) {
+      if (draft || pendingDelete) return;
+      if (event.target instanceof HTMLElement) {
+        if (
+          event.target.closest(
+            "input, textarea, select, [contenteditable='true']",
+          )
+        ) {
+          return;
+        }
+      }
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      if (count < 2) return;
+      const delta = event.key === "ArrowLeft" ? -1 : 1;
+      setFocusIndex((index) => (index + delta + count) % count);
+    }
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [layout, draft, pendingDelete, visible.length]);
 
   function openCreate() {
     setFront("");
@@ -271,6 +337,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
     <section
       className="flash-deck flex min-h-0 flex-1 flex-col"
       data-size={textSize}
+      data-layout={layout}
     >
       <div className="flex shrink-0 flex-col gap-3 border-b border-line px-3 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
@@ -280,9 +347,11 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
           <p className="truncate text-sm text-ink-soft">
             {cards.length === 0
               ? "Write both sides, then click a card to flip it."
-              : query.trim()
-                ? `${visible.length} of ${cards.length} ${cards.length === 1 ? "card" : "cards"}`
-                : `${cards.length} ${cards.length === 1 ? "card" : "cards"} · click any card to flip it`}
+              : layout === "focus" && focused
+                ? `${focusIndex + 1} of ${visible.length} · click the card to flip it`
+                : query.trim()
+                  ? `${visible.length} of ${cards.length} ${cards.length === 1 ? "card" : "cards"}`
+                  : `${cards.length} ${cards.length === 1 ? "card" : "cards"} · click any card to flip it`}
           </p>
         </div>
         <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:w-auto lg:justify-end">
@@ -334,6 +403,31 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
           <Button
             type="button"
             variant="secondary"
+            onClick={() =>
+              chooseLayout(layout === "grid" ? "focus" : "grid")
+            }
+            aria-pressed={layout === "focus"}
+            title={
+              layout === "grid"
+                ? "Show one card at a time"
+                : "Show all cards together"
+            }
+          >
+            {layout === "grid" ? (
+              <>
+                <IconCardOne size={18} />
+                One card
+              </>
+            ) : (
+              <>
+                <IconGrid size={18} />
+                All cards
+              </>
+            )}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
             onClick={shuffleDeck}
             disabled={visible.length < 2}
           >
@@ -373,6 +467,20 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
               />
             </div>
           </div>
+        ) : layout === "focus" && focused ? (
+          <FocusStudy
+            card={focused}
+            stripe={STRIPES[focusIndex % STRIPES.length]}
+            index={focusIndex}
+            total={visible.length}
+            width={cardWidth}
+            height={cardHeight}
+            shuffleEpoch={shuffleEpoch}
+            onPrev={() => goFocus(-1)}
+            onNext={() => goFocus(1)}
+            onEdit={() => openEdit(focused)}
+            onDelete={() => setPendingDelete(focused)}
+          />
         ) : (
           <ul
             className="grid gap-4"
@@ -473,6 +581,79 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
         onConfirm={confirmDelete}
       />
     </section>
+  );
+}
+
+function FocusStudy({
+  card,
+  stripe,
+  index,
+  total,
+  width,
+  height,
+  shuffleEpoch,
+  onPrev,
+  onNext,
+  onEdit,
+  onDelete,
+}: {
+  card: FlashCardData;
+  stripe: string;
+  index: number;
+  total: number;
+  width: number;
+  height: number;
+  shuffleEpoch: number;
+  onPrev: () => void;
+  onNext: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const canMove = total > 1;
+
+  return (
+    <div className="flex min-h-full flex-col items-center justify-center gap-5">
+      <div
+        className="w-full max-w-full"
+        style={{ width, height, maxWidth: "100%" }}
+      >
+        <FlipCard
+          key={`${card.id}-${shuffleEpoch}`}
+          card={card}
+          stripe={stripe}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      </div>
+      <div className="flex items-center gap-3">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onPrev}
+          disabled={!canMove}
+          aria-label="Previous card"
+        >
+          <IconBack size={18} />
+          Prev
+        </Button>
+        <p
+          className="min-w-16 text-center text-sm tabular-nums text-ink-soft"
+          aria-live="polite"
+        >
+          {index + 1} / {total}
+        </p>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onNext}
+          disabled={!canMove}
+          aria-label="Next card"
+        >
+          Next
+          <IconChevronRight size={18} />
+        </Button>
+      </div>
+    </div>
   );
 }
 

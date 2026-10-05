@@ -66,6 +66,25 @@ export const IconBack = (p: IconProps) => (
   </Svg>
 );
 
+export const IconChevronRight = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M8 4.5L13.5 10l-5.5 5.5" />
+  </Svg>
+);
+
+export const IconGrid = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4.5 4.5h4.5v4.5H4.5zM11 4.5h4.5v4.5H11zM4.5 11h4.5v4.5H4.5zM11 11h4.5v4.5H11z" />
+  </Svg>
+);
+
+export const IconCardOne = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5.5 3.75h9v12.5h-9z" />
+    <path d="M8 8h4M8 11h2.5" />
+  </Svg>
+);
+
 export const IconStack = (p: IconProps) => (
   <Svg {...p}>
     <path d="M10 2.75l6.5 3.25L10 9.25 3.5 6l6.5-3.25z" />
