@@ -14,11 +14,11 @@ export default function Header({ wide = false }: { wide?: boolean }) {
   return (
     <header className="shrink-0 border-b border-ink/10 bg-paper/95">
       <div
-        className={`mx-auto flex h-16 items-center justify-between gap-4 px-5 sm:px-6 ${
+        className={`mx-auto flex h-14 items-center justify-between gap-2 px-3 sm:h-16 sm:gap-4 sm:px-6 ${
           wide ? "max-w-none" : "max-w-6xl"
         }`}
       >
-        <div className="flex min-w-0 items-center gap-6">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-6">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-plum text-ink-invert shadow-sm">
               <svg
@@ -53,7 +53,7 @@ export default function Header({ wide = false }: { wide?: boolean }) {
                 />
               </svg>
             </div>
-            <span className="font-display text-lg font-semibold tracking-tight">
+            <span className="hidden font-display text-lg font-semibold tracking-tight sm:inline">
               Note-Stack
             </span>
           </Link>
@@ -69,26 +69,33 @@ export default function Header({ wide = false }: { wide?: boolean }) {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`whitespace-nowrap rounded-md px-2 py-1.5 text-sm font-medium transition-colors sm:px-3 ${
                     active
                       ? "bg-surface text-ink"
                       : "text-ink-soft hover:bg-surface hover:text-ink"
                   }`}
                 >
-                  {item.label}
+                  {item.href === "/flash-cards" ? (
+                    <>
+                      <span className="sm:hidden">Cards</span>
+                      <span className="hidden sm:inline">{item.label}</span>
+                    </>
+                  ) : (
+                    item.label
+                  )}
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
           <span className="hidden text-sm text-ink-soft sm:inline">
             Your workspace
           </span>
           <button
             type="button"
-            className="rounded-md bg-plum px-4 py-2 text-sm font-semibold text-ink-invert shadow transition-colors hover:bg-plum/80"
+            className="rounded-md bg-plum px-3 py-2 text-sm font-semibold text-ink-invert shadow transition-colors hover:bg-plum/80 sm:px-4"
           >
             Login
           </button>

@@ -96,7 +96,7 @@ function CardSizeControl({
 }) {
   return (
     <div
-      className="flex items-center gap-3 rounded-lg border border-line bg-paper px-3 py-1.5"
+      className="flex w-full min-w-0 flex-col gap-2 rounded-lg border border-line bg-paper px-3 py-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3 sm:py-1.5"
       role="group"
       aria-label="Card size"
     >
@@ -132,8 +132,8 @@ function SizeSlider({
   onChange: (next: number) => void;
 }) {
   return (
-    <label className="flex items-center gap-2 text-meta font-medium text-ink-soft">
-      <span className="w-11">{label}</span>
+    <label className="flex min-w-0 flex-1 items-center gap-2 text-meta font-medium text-ink-soft">
+      <span className="w-11 shrink-0">{label}</span>
       <input
         type="range"
         min={min}
@@ -143,7 +143,7 @@ function SizeSlider({
         aria-valuetext={`${value} pixels`}
         aria-label={`Card ${label.toLowerCase()}`}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-1 w-24 cursor-pointer accent-orchid"
+        className="h-1 w-full min-w-0 flex-1 cursor-pointer accent-orchid sm:w-24"
       />
       <span className="w-8 tabular-nums text-ink">{value}</span>
     </label>
@@ -272,7 +272,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
       className="flash-deck flex min-h-0 flex-1 flex-col"
       data-size={textSize}
     >
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
+      <div className="flex shrink-0 flex-col gap-3 border-b border-line px-3 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
           <h1 className="font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">
             Flash cards
@@ -285,13 +285,13 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
                 : `${cards.length} ${cards.length === 1 ? "card" : "cards"} · click any card to flip it`}
           </p>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:w-auto lg:justify-end">
           <SearchField
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search cards"
             aria-label="Search cards"
-            className="w-52"
+            className="w-full sm:w-52"
           />
           <CardSizeControl
             width={cardWidth}
@@ -299,6 +299,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
             onWidth={chooseCardWidth}
             onHeight={chooseCardHeight}
           />
+          <div className="flex flex-wrap items-center gap-2">
           <div
             className="flex items-center rounded-lg border border-line bg-paper p-0.5"
             role="group"
@@ -343,6 +344,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
             <IconPlus size={18} />
             New card
           </Button>
+          </div>
         </div>
       </div>
 
@@ -375,7 +377,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
           <ul
             className="grid gap-4"
             style={{
-              gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${cardWidth}px), ${cardWidth}px))`,
+              gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${cardWidth}px), min(100%, ${cardWidth}px)))`,
               gridAutoRows: `${cardHeight}px`,
             }}
           >
@@ -434,7 +436,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
                 onChange={(e) => setFront(e.target.value)}
                 placeholder="Write the front of this card"
                 rows={8}
-                className="flash-field min-h-48"
+                className="flash-field min-h-32 sm:min-h-48"
                 autoFocus
               />
             )}
@@ -448,7 +450,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
                 onChange={(e) => setBack(e.target.value)}
                 placeholder="Write the back of this card"
                 rows={8}
-                className="flash-field min-h-48"
+                className="flash-field min-h-32 sm:min-h-48"
               />
             )}
           </Field>
