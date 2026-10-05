@@ -183,7 +183,9 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
   const [focusIndex, setFocusIndex] = useState(0);
   const [query, setQuery] = useState("");
 
+  // Hydrate saved display prefs after mount so the server HTML stays stable.
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- localStorage hydration */
     const saved = localStorage.getItem(TEXT_SIZE_KEY);
     if (isTextSize(saved)) setTextSize(saved);
     const savedLayout = localStorage.getItem(LAYOUT_KEY);
@@ -200,6 +202,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
     );
     if (width) setCardWidth(width);
     if (height) setCardHeight(height);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   function chooseTextSize(next: TextSize) {
@@ -232,19 +235,14 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
     );
   }, [deck, query]);
 
-  useEffect(() => {
-    setFocusIndex((index) => {
-      if (visible.length === 0) return 0;
-      return Math.min(index, visible.length - 1);
-    });
-  }, [visible]);
-
-  const focused = visible[focusIndex] ?? null;
+  const focusIndexSafe =
+    visible.length === 0 ? 0 : Math.min(focusIndex, visible.length - 1);
+  const focused = visible[focusIndexSafe] ?? null;
 
   function goFocus(delta: number) {
     if (visible.length < 2) return;
     setFocusIndex(
-      (index) => (index + delta + visible.length) % visible.length,
+      (focusIndexSafe + delta + visible.length) % visible.length,
     );
   }
 
@@ -348,7 +346,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
             {cards.length === 0
               ? "Write both sides, then click a card to flip it."
               : layout === "focus" && focused
-                ? `${focusIndex + 1} of ${visible.length} · click the card to flip it`
+                ? `${focusIndexSafe + 1} of ${visible.length} · click the card to flip it`
                 : query.trim()
                   ? `${visible.length} of ${cards.length} ${cards.length === 1 ? "card" : "cards"}`
                   : `${cards.length} ${cards.length === 1 ? "card" : "cards"} · click any card to flip it`}
@@ -470,8 +468,8 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
         ) : layout === "focus" && focused ? (
           <FocusStudy
             card={focused}
-            stripe={STRIPES[focusIndex % STRIPES.length]}
-            index={focusIndex}
+            stripe={STRIPES[focusIndexSafe % STRIPES.length]}
+            index={focusIndexSafe}
             total={visible.length}
             width={cardWidth}
             height={cardHeight}
