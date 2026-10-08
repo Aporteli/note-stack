@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import {
   createFlashCard,
   deleteFlashCard,
@@ -11,7 +12,7 @@ import { ConfirmDialog } from "@/components/Board/components/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/Feedback";
 import { Field, SearchField, Textarea } from "@/components/ui/Field";
-import { IconPencil, IconPlus, IconShuffle, IconStack, IconTrash } from "@/components/ui/Icons";
+import { IconBack, IconPencil, IconPlus, IconShuffle, IconStack, IconTrash } from "@/components/ui/Icons";
 import { Modal } from "@/components/ui/Overlay";
 
 export type FlashCardData = {
@@ -154,7 +155,15 @@ function SizeSlider({
   );
 }
 
-export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
+export function FlashDeck({
+  topicId,
+  topicName,
+  cards,
+}: {
+  topicId: string;
+  topicName: string;
+  cards: FlashCardData[];
+}) {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [front, setFront] = useState("");
   const [back, setBack] = useState("");
@@ -234,7 +243,11 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
           : randomCard
             ? [randomCard.id]
             : [];
-      const next = await getRandomFlashCard(exclude, drawMode === "repeat");
+      const next = await getRandomFlashCard(
+        topicId,
+        exclude,
+        drawMode === "repeat",
+      );
       if (!next) {
         if (drawMode === "once") {
           setRandomCard(null);
@@ -310,7 +323,7 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
     startTransition(async () => {
       const result =
         draft.mode === "create"
-          ? await createFlashCard(front, back)
+          ? await createFlashCard(topicId, front, back)
           : await updateFlashCard(draft.id, front, back);
 
       if (!result.ok) {
@@ -349,8 +362,15 @@ export function FlashDeck({ cards }: { cards: FlashCardData[] }) {
     >
       <div className="flex shrink-0 flex-col gap-3 border-b border-line px-3 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
+          <Link
+            href="/flash-cards"
+            className="mb-1 inline-flex items-center gap-1 text-meta font-medium text-ink-soft hover:text-ink"
+          >
+            <IconBack size={14} />
+            All topics
+          </Link>
           <h1 className="font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">
-            Flash cards
+            {topicName}
           </h1>
           <p className="truncate text-sm text-ink-soft">
             {cards.length === 0
