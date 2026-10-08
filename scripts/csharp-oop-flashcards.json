@@ -1,0 +1,966 @@
+[
+  {
+    "front": "რა არის OOP?",
+    "back": "OOP (Object-Oriented Programming) არის პროგრამირების მიდგომა, სადაც პროგრამა ორგანიზებულია ობიექტების გარშემო. ობიექტებს აქვთ მდგომარეობა (state) და ქცევა (behavior)."
+  },
+  {
+    "front": "რას ნიშნავს Object-Oriented Programming?",
+    "back": "Object-Oriented Programming ნიშნავს ობიექტზე ორიენტირებულ პროგრამირებას — პროგრამის აგებას კლასებისა და მათგან შექმნილი ობიექტების გამოყენებით."
+  },
+  {
+    "front": "რა არის ობიექტი OOP-ში?",
+    "back": "ობიექტი არის კლასის კონკრეტული ეგზემპლარი (instance). მას აქვს საკუთარი მონაცემები/მდგომარეობა და შეუძლია მეთოდების შესრულება."
+  },
+  {
+    "front": "რა ორი ძირითადი რამ აქვს ობიექტს?",
+    "back": "ობიექტს აქვს state (მდგომარეობა/მონაცემები) და behavior (ქცევა/მეთოდები)."
+  },
+  {
+    "front": "რა არის State?",
+    "back": "State არის ობიექტის მიმდინარე მდგომარეობა — მაგალითად Student-ის Name და Age."
+  },
+  {
+    "front": "რა არის Behavior?",
+    "back": "Behavior არის ის, რისი გაკეთებაც ობიექტს შეუძლია — მაგალითად Student-ის Study() მეთოდი."
+  },
+  {
+    "front": "რა არის class C#-ში?",
+    "back": "class არის შაბლონი/აღწერა, რომელიც განსაზღვრავს რა მონაცემები და ქცევა ექნება მისგან შექმნილ ობიექტებს."
+  },
+  {
+    "front": "რა განსხვავებაა class-სა და object-ს შორის?",
+    "back": "Class არის შაბლონი, object კი ამ შაბლონის კონკრეტული შექმნილი ეგზემპლარი."
+  },
+  {
+    "front": "შეიძლება თუ არა class პირდაპირ ჩაითვალოს object-ად?",
+    "back": "არა. ჩვეულებრივი class აღწერს ობიექტს; object იქმნება ამ class-ის საფუძველზე, მაგალითად new Student()."
+  },
+  {
+    "front": "რას აკეთებს new C#-ში?",
+    "back": "new ქმნის კლასის ახალი ობიექტის instance-ს და აბრუნებს მასზე reference-ს."
+  },
+  {
+    "front": "რას ნიშნავს Student student = new Student();?",
+    "back": "პირველი Student არის ტიპი, student არის reference variable, ხოლო new Student() ქმნის Student-ის ახალ ობიექტს."
+  },
+  {
+    "front": "Student student = new Student();-ში პირველი Student რას ნიშნავს?",
+    "back": "პირველი Student არის ცვლადის ტიპი. ის ამბობს, რომ student ცვლადში შეიძლება იყოს Student ტიპის ობიექტზე reference."
+  },
+  {
+    "front": "Student student = new Student();-ში student რას ნიშნავს?",
+    "back": "student არის ცვლადის სახელი, რომელიც ინახავს Student ობიექტზე reference-ს."
+  },
+  {
+    "front": "Student student = new Student();-ში new Student() რას ნიშნავს?",
+    "back": "new Student() ქმნის Student კლასის ახალ ობიექტს."
+  },
+  {
+    "front": "რა არის instance?",
+    "back": "Instance არის კონკრეტული ობიექტი, რომელიც class-ის საფუძველზე შეიქმნა."
+  },
+  {
+    "front": "შეიძლება ერთი class-იდან ბევრი object შეიქმნას?",
+    "back": "დიახ. ერთი class შეიძლება იყოს მრავალი დამოუკიდებელი object-ის შაბლონი."
+  },
+  {
+    "front": "თუ ერთი class-იდან ორი object შევქმენით, ისინი ერთი ობიექტია?",
+    "back": "არა. new-ის ორჯერ გამოყენებით იქმნება ორი სხვადასხვა object, თუ ორივე ცალკე იქნა შექმნილი."
+  },
+  {
+    "front": "რა არის field?",
+    "back": "Field არის კლასის შიგნით გამოცხადებული ცვლადი, რომელიც ჩვეულებრივ ობიექტის ან კლასის მდგომარეობას ინახავს."
+  },
+  {
+    "front": "რა არის method?",
+    "back": "Method არის კლასში განსაზღვრული ფუნქცია, რომელიც აღწერს გარკვეულ ქცევას/ოპერაციას."
+  },
+  {
+    "front": "რა არის property?",
+    "back": "Property არის წევრი, რომელიც მონაცემზე წვდომას get/set აქსესორების საშუალებით აკონტროლებს."
+  },
+  {
+    "front": "რა განსხვავებაა field-სა და property-ს შორის?",
+    "back": "Field პირდაპირ ინახავს მნიშვნელობას. Property კი წვდომის კონტროლს იძლევა get/set-ის საშუალებით და შეიძლება შეიცავდეს ლოგიკას."
+  },
+  {
+    "front": "რა არის constructor?",
+    "back": "Constructor არის სპეციალური წევრი, რომელიც ობიექტის შექმნისას ავტომატურად გამოიძახება და გამოიყენება ობიექტის საწყისი მდგომარეობის დასაყენებლად."
+  },
+  {
+    "front": "როდის იძახება constructor?",
+    "back": "ჩვეულებრივ, როცა new-ით შესაბამისი კლასის ობიექტი იქმნება."
+  },
+  {
+    "front": "რა არის parameterized constructor?",
+    "back": "Constructor, რომელსაც ერთი ან მეტი პარამეტრი აქვს და მათი საშუალებით ობიექტის საწყისი მონაცემები განისაზღვრება."
+  },
+  {
+    "front": "რას ნიშნავს this C#-ში?",
+    "back": "this მიუთითებს მიმდინარე ობიექტზე — იმ instance-ზე, რომლის მეთოდი ან constructor ამ მომენტში სრულდება."
+  },
+  {
+    "front": "რას ნიშნავს this.name = name?",
+    "back": "მარცხნივ this.name არის მიმდინარე ობიექტის field/property, მარჯვნივ name კი constructor-ის parameter. ანუ parameter-ის მნიშვნელობა ობიექტის წევრში ინახება."
+  },
+  {
+    "front": "რატომ ვიყენებთ this-ს constructor-ში?",
+    "back": "ხშირად იმიტომ, რომ parameter-სა და field-ს ერთი სახელი აქვთ და this განასხვავებს ობიექტის წევრს parameter-ისგან."
+  },
+  {
+    "front": "რა არის constructor chaining?",
+    "back": "Constructor chaining ნიშნავს ერთი constructor-იდან იმავე კლასის სხვა constructor-ის ან parent class-ის constructor-ის გამოძახებას."
+  },
+  {
+    "front": "რას ნიშნავს : this(...) constructor-ის შემდეგ?",
+    "back": "ეს ნიშნავს, რომ მიმდინარე კლასის სხვა constructor უნდა გამოიძახოს."
+  },
+  {
+    "front": "რას ნიშნავს : base(...) constructor-ის შემდეგ?",
+    "back": "ეს ნიშნავს, რომ parent/base class-ის constructor უნდა გამოიძახოს."
+  },
+  {
+    "front": "რა არის base?",
+    "back": "base მიუთითებს parent/base class-ის წევრებზე ან გამოიყენება parent class-ის constructor-ის გამოძახებისთვის."
+  },
+  {
+    "front": "რა არის encapsulation?",
+    "back": "Encapsulation არის მონაცემებისა და მათზე მოქმედი ლოგიკის ერთობლივად ორგანიზება და შიდა მდგომარეობაზე პირდაპირი წვდომის კონტროლი."
+  },
+  {
+    "front": "რატომ გვჭირდება encapsulation?",
+    "back": "იმისთვის, რომ ობიექტის მდგომარეობა შემთხვევით ან არასწორად არ შეიცვალოს და ცვლილება კონტროლირებული წესით მოხდეს."
+  },
+  {
+    "front": "რა პრობლემაა public double balance; ბანკის მაგალითში?",
+    "back": "გარედან ნებისმიერ კოდს შეუძლია balance-ის პირდაპირ შეცვლა, მაგალითად account.balance = -1000000; ამიტომ ობიექტის მდგომარეობა დაუცველია."
+  },
+  {
+    "front": "როგორ გამოვიყენოთ private balance?",
+    "back": "მაგალითად private double balance; — გარედან balance პირდაპირ აღარ იქნება ხელმისაწვდომი და ცვლილება შეიძლება მეთოდით ან კონტროლირებული property-ით მოხდეს."
+  },
+  {
+    "front": "რას ნიშნავს private double balance;",
+    "back": "private არის access modifier, double არის მონაცემის ტიპი, balance არის field-ის სახელი. Field ხელმისაწვდომია მხოლოდ შესაბამისი class-ის შიგნით."
+  },
+  {
+    "front": "რა არის double?",
+    "back": "double არის მცურავი წერტილის მქონე რიცხვითი ტიპი, რომელიც გამოიყენება ათწილადი/რეალური მნიშვნელობებისთვის."
+  },
+  {
+    "front": "რა განსხვავებაა int-სა და double-ს შორის?",
+    "back": "int ინახავს მთელ რიცხვებს, მაგალითად 10-ს. double გამოიყენება ათწილადი მნიშვნელობებისთვის, მაგალითად 10.5."
+  },
+  {
+    "front": "რა არის access modifier?",
+    "back": "Access modifier განსაზღვრავს, რომელი კოდი შეძლებს class-ის ან მისი წევრის გამოყენებას."
+  },
+  {
+    "front": "რა არის public?",
+    "back": "public წევრზე წვდომა შეიძლება შესაბამისი ხელმისაწვდომობის წესების ფარგლებში სხვა კოდიდანაც, მათ შორის სხვა კლასებიდან."
+  },
+  {
+    "front": "რა არის private?",
+    "back": "private წევრი ხელმისაწვდომია მხოლოდ იმავე class-ის შიგნით."
+  },
+  {
+    "front": "რა არის protected?",
+    "back": "protected წევრი ხელმისაწვდომია თვითონ class-ში და მისგან მემკვიდრეობით მიღებულ class-ებში."
+  },
+  {
+    "front": "რა არის internal?",
+    "back": "internal წევრი ხელმისაწვდომია იმავე assembly-ში."
+  },
+  {
+    "front": "რა არის assembly?",
+    "back": "Assembly არის .NET-ის კომპილირებული ერთეული, მაგალითად .dll ან executable, რომელიც ტიპებსა და კოდს შეიცავს."
+  },
+  {
+    "front": "private-ის მარტივი დასამახსოვრებელი წესია?",
+    "back": "private → მხოლოდ მე, ანუ მხოლოდ ის class, სადაც წევრი გამოცხადებულია."
+  },
+  {
+    "front": "protected-ის მარტივი წესია?",
+    "back": "protected → მე + ჩემი შვილები, ანუ declaring class და derived classes."
+  },
+  {
+    "front": "internal-ის მარტივი წესია?",
+    "back": "internal → ჩემი assembly."
+  },
+  {
+    "front": "public-ის მარტივი წესია?",
+    "back": "public → გარედანაც ხელმისაწვდომია, თუ სხვა შეზღუდვა არ მოქმედებს."
+  },
+  {
+    "front": "შეუძლია თუ არა სხვა ჩვეულებრივ class-ს private field-ზე წვდომა?",
+    "back": "არა, private წევრი პირდაპირ მხოლოდ იმავე class-ის შიგნით არის ხელმისაწვდომი."
+  },
+  {
+    "front": "შეუძლია თუ არა derived class-ს protected წევრის გამოყენება?",
+    "back": "დიახ, protected წევრი derived class-ისთვის ხელმისაწვდომია."
+  },
+  {
+    "front": "რა განსხვავებაა public field-სა და private field-ს შორის?",
+    "back": "public field-ზე გარედან პირდაპირ შეიძლება წვდომა, private field-ზე კი არა; private უფრო კარგად ეხმარება encapsulation-ს."
+  },
+  {
+    "front": "რა არის inheritance?",
+    "back": "Inheritance არის მექანიზმი, რომლის დროსაც derived class იღებს base class-ის ხელმისაწვდომ წევრებს და ამატებს ან ცვლის საკუთარ ქცევას."
+  },
+  {
+    "front": "როგორ იწერება inheritance C#-ში?",
+    "back": "მაგალითად: class Dog : Animal { } — Dog არის derived class, Animal კი base class."
+  },
+  {
+    "front": "რას ნიშნავს Dog is an Animal?",
+    "back": "ეს ნიშნავს, რომ Dog არის Animal-ის სპეციალიზებული ტიპი და შეიძლება გამოყენებულ იქნეს Animal-ის მოლოდინის ადგილას, როცა LSP-ის პირობები სრულდება."
+  },
+  {
+    "front": "რა არის base class?",
+    "back": "Base class არის მშობელი ტიპი, რომლისგანაც სხვა class მემკვიდრეობას იღებს."
+  },
+  {
+    "front": "რა არის derived class?",
+    "back": "Derived class არის class, რომელიც სხვა base class-ისგან მემკვიდრეობას იღებს."
+  },
+  {
+    "front": "რა არის polymorphism?",
+    "back": "Polymorphism ნიშნავს ერთი საერთო ტიპის/ინტერფეისის საშუალებით სხვადასხვა კონკრეტული implementation-ის გამოყენებას."
+  },
+  {
+    "front": "რა არის runtime polymorphism?",
+    "back": "მაგალითად Animal animal = new Dog(); animal.Speak(); — გამოძახებისას შესაბამისი override-ის implementation შეიძლება შესრულდეს."
+  },
+  {
+    "front": "რა არის virtual?",
+    "back": "virtual წევრი base class-ში შეიძლება derived class-მა override-ით შეცვალოს."
+  },
+  {
+    "front": "რა არის override?",
+    "back": "override ნიშნავს inherited virtual ან abstract წევრის derived class-ში ახალი implementation-ის მიწოდებას."
+  },
+  {
+    "front": "რა განსხვავებაა overload-სა და override-ს შორის?",
+    "back": "Overload არის ერთი სახელის მქონე მეთოდების განსხვავებული parameter list. Override კი parent class-ის virtual/abstract მეთოდის derived class-ში გადაფარვაა."
+  },
+  {
+    "front": "რა არის method overloading?",
+    "back": "ერთი მეთოდის სახელის რამდენიმე ვერსია, რომლებიც განსხვავდებიან პარამეტრების რაოდენობით ან ტიპებით."
+  },
+  {
+    "front": "მეთოდის return type-ის შეცვლა მარტო overload-ს ქმნის?",
+    "back": "არა. მხოლოდ return type-ის განსხვავება overload-ისთვის საკმარისი არ არის; parameter list უნდა განსხვავდებოდეს."
+  },
+  {
+    "front": "რა არის method overriding?",
+    "back": "Derived class-ში base class-ის virtual/abstract მეთოდისთვის ახალი implementation-ის განსაზღვრა override-ით."
+  },
+  {
+    "front": "რატომ გვჭირდება virtual?",
+    "back": "იმისთვის, რომ derived class-ს ჰქონდეს შესაძლებლობა base class-ის მეთოდის implementation შეცვალოს."
+  },
+  {
+    "front": "რა არის abstraction?",
+    "back": "Abstraction არის მნიშვნელოვანი ინტერფეისისა და შესაძლებლობების გამოყოფა და შიდა implementation-ის დეტალების დამალვა."
+  },
+  {
+    "front": "რა არის abstract class?",
+    "back": "abstract class არის base class, რომლისგანაც პირდაპირ object-ის შექმნა არ შეიძლება და რომელიც შეიძლება შეიცავდეს როგორც abstract, ისე ჩვეულებრივ წევრებს."
+  },
+  {
+    "front": "შეიძლება abstract class-ის instance-ის შექმნა?",
+    "back": "არა, პირდაპირ new AbstractClass() ვერ გაკეთდება."
+  },
+  {
+    "front": "შეიძლება abstract class-ს ჰქონდეს ჩვეულებრივი method?",
+    "back": "დიახ, abstract class-ს შეუძლია ჰქონდეს როგორც abstract, ისე concrete methods."
+  },
+  {
+    "front": "რა არის abstract method?",
+    "back": "abstract method-ს base class-ში implementation არ აქვს და derived class-ს მისი implementation-ის მიწოდება ევალება, თუ derived class თვითონაც abstract არ არის."
+  },
+  {
+    "front": "რა არის interface?",
+    "back": "Interface არის კონტრაქტი, რომელიც აღწერს რა შესაძლებლობები/წევრები უნდა ჰქონდეს მის implementing type-ს."
+  },
+  {
+    "front": "რას ნიშნავს class-ის მიერ interface-ის implementation?",
+    "back": "მაგალითად class Tesla : ICar ნიშნავს, რომ Tesla იღებს ICar-ის კონტრაქტს და უნდა დააკმაყოფილოს მისი მოთხოვნები."
+  },
+  {
+    "front": "შეიძლება class-მა რამდენიმე interface implement-ოს?",
+    "back": "დიახ. C#-ში class-ს შეუძლია რამდენიმე interface-ის implementation."
+  },
+  {
+    "front": "შეიძლება class-მა რამდენიმე class-ისგან inheritance მიიღოს?",
+    "back": "არა. C# class-ს მხოლოდ ერთი base class შეიძლება ჰქონდეს, თუმცა შეუძლია მრავალი interface implement-ოს."
+  },
+  {
+    "front": "რა განსხვავებაა interface-სა და abstract class-ს შორის?",
+    "back": "Interface ძირითადად კონტრაქტს განსაზღვრავს; abstract class კი საერთო base ტიპს წარმოადგენს და შეიძლება საერთო implementation/state-იც ჰქონდეს."
+  },
+  {
+    "front": "როდის შეიძლება interface იყოს კარგი არჩევანი?",
+    "back": "როცა გვინდა საერთო კონტრაქტი სხვადასხვა, ერთმანეთისგან დამოუკიდებელ class-ს მივცეთ."
+  },
+  {
+    "front": "როდის შეიძლება abstract class იყოს კარგი არჩევანი?",
+    "back": "როცა ტიპებს აქვთ საერთო base კონცეფცია და გვინდა მათთვის საერთო კოდი/state, თან ზოგი ქცევა abstract დავტოვოთ."
+  },
+  {
+    "front": "რა არის composition?",
+    "back": "Composition არის has-a ურთიერთობა, როცა ერთი ობიექტი სხვა ობიექტს შეიცავს, მაგალითად Car-ს აქვს Engine."
+  },
+  {
+    "front": "რა არის association?",
+    "back": "Association არის ზოგადი ურთიერთობა ორ ობიექტს შორის, როცა ისინი ერთმანეთთან ურთიერთობენ ან ერთმანეთს იცნობენ."
+  },
+  {
+    "front": "რა არის aggregation?",
+    "back": "Aggregation არის has-a ურთიერთობის ფორმა, სადაც შემადგენელი ობიექტი შეიძლება დამოუკიდებლადაც არსებობდეს."
+  },
+  {
+    "front": "რა არის composition-სა და aggregation-ს შორის მთავარი იდეა?",
+    "back": "Composition-ში ნაწილის სიცოცხლის ციკლი ძლიერ არის დაკავშირებული მთლიანთან; aggregation-ში ნაწილი დამოუკიდებლადაც შეიძლება არსებობდეს."
+  },
+  {
+    "front": "რა არის is-a ურთიერთობა?",
+    "back": "is-a ჩვეულებრივ inheritance-ის ურთიერთობაა, მაგალითად Dog is an Animal."
+  },
+  {
+    "front": "რა არის has-a ურთიერთობა?",
+    "back": "has-a ნიშნავს, რომ ერთ ობიექტს აქვს/შეიცავს სხვა ობიექტი, მაგალითად Car has an Engine."
+  },
+  {
+    "front": "რატომ შეიძლება composition იყოს უკეთესი ვიდრე inheritance?",
+    "back": "composition ხშირად უფრო მოქნილია, რადგან ქცევების კომბინირება შესაძლებელია ისე, რომ მკაცრი parent-child იერარქია არ შეიქმნას."
+  },
+  {
+    "front": "რა არის value type?",
+    "back": "Value type-ის ცვლადი თავად ინახავს მნიშვნელობას. ერთი value type ცვლადის მეორეში მინიჭებისას ჩვეულებრივ მნიშვნელობა კოპირდება."
+  },
+  {
+    "front": "რა არის reference type?",
+    "back": "Reference type-ის ცვლადი ინახავს ობიექტზე reference-ს და არა ობიექტის სრულ მონაცემებს პირდაპირ ცვლადში."
+  },
+  {
+    "front": "დაასახელე C#-ის გავრცელებული value types.",
+    "back": "მაგალითად int, double, float, decimal, bool, char და struct."
+  },
+  {
+    "front": "დაასახელე C#-ის გავრცელებული reference types.",
+    "back": "მაგალითად class, array, object, interface, delegate და string."
+  },
+  {
+    "front": "class value type არის თუ reference type?",
+    "back": "class არის reference type."
+  },
+  {
+    "front": "struct value type არის თუ reference type?",
+    "back": "struct არის value type."
+  },
+  {
+    "front": "რა ხდება int a = 10; int b = a; b = 50; შემთხვევაში?",
+    "back": "a რჩება 10, რადგან b-ში a-ს მნიშვნელობა დაკოპირდა. b-ის შეცვლა a-ს არ ცვლის."
+  },
+  {
+    "front": "რა ხდება Student a = new Student(); Student b = a; შემთხვევაში?",
+    "back": "a და b მიუთითებენ ერთსა და იმავე Student ობიექტზე. b-ის საშუალებით ობიექტის მდგომარეობის შეცვლა იგივე ობიექტზე აისახება."
+  },
+  {
+    "front": "ორი reference შეიძლება ერთ ობიექტზე მიუთითებდეს?",
+    "back": "დიახ. მაგალითად Student b = a; ქმნის მეორე reference-ს იმავე object-ზე."
+  },
+  {
+    "front": "რა არის aliasing reference types-ში?",
+    "back": "როცა რამდენიმე reference ერთი და იმავე ობიექტზე მიუთითებს და ერთი reference-ით გაკეთებული ობიექტის ცვლილება სხვაზეც ჩანს."
+  },
+  {
+    "front": "რა არის null?",
+    "back": "null ნიშნავს, რომ reference-ს ამ მომენტში ობიექტზე reference არ აქვს."
+  },
+  {
+    "front": "null ცარიელი object არის?",
+    "back": "არა. null არ არის ცარიელი object; ეს ნიშნავს, რომ reference არ მიუთითებს ობიექტზე."
+  },
+  {
+    "front": "რა განსხვავებაა Student student = null; და Student student = new Student(); შორის?",
+    "back": "პირველში reference ობიექტზე არ მიუთითებს. მეორეში new ქმნის Student object-ს და student მასზე მიუთითებს."
+  },
+  {
+    "front": "რა არის NullReferenceException?",
+    "back": "ეს exception ხდება მაშინ, როცა null reference-ის საშუალებით ობიექტის წევრის გამოყენებას ვცდილობთ."
+  },
+  {
+    "front": "როგორ ავიცილოთ NullReferenceException მარტივად?",
+    "back": "შეამოწმოთ null, გამოიყენოთ null-conditional ოპერატორი ?. ან შესაბამისი nullable API-ები."
+  },
+  {
+    "front": "რას ნიშნავს int? age = null;?",
+    "back": "int? არის Nullable<int>; მას შეუძლია შეინახოს მთელი რიცხვი ან null."
+  },
+  {
+    "front": "რას ნიშნავს string? name = null;?",
+    "back": "nullable reference type annotation, რომელიც კომპილატორს ეუბნება, რომ name-ს null შეიძლება ჰქონდეს."
+  },
+  {
+    "front": "რას აკეთებს ? nullable ტიპის აღნიშვნაში?",
+    "back": "value type-ის შემთხვევაში ქმნის nullable value type-ს; reference type-ის შემთხვევაში მიუთითებს, რომ reference შეიძლება იყოს null."
+  },
+  {
+    "front": "რას აკეთებს null-conditional ოპერატორი ?.?",
+    "back": "თუ მარცხენა მხარე null არ არის, წევრზე წვდომას ახორციელებს; თუ null არის, შედეგი null ხდება შესაბამისი nullable კონტექსტის მიხედვით."
+  },
+  {
+    "front": "რას აკეთებს ?? ოპერატორი?",
+    "back": "თუ მარცხენა მნიშვნელობა null არის, აბრუნებს მარჯვენა მნიშვნელობას; წინააღმდეგ შემთხვევაში მარცხენას."
+  },
+  {
+    "front": "რას აკეთებს ??= ოპერატორი?",
+    "back": "თუ მარცხენა მხარე null არის, მას ანიჭებს მარჯვენა მხარეს."
+  },
+  {
+    "front": "რას აკეთებს null-forgiving ! ოპერატორი?",
+    "back": "კომპილატორს ეუბნება, რომ პროგრამისტი თვლის მნიშვნელობას non-null-ად. ის runtime-ში null-ს არ აქრობს."
+  },
+  {
+    "front": "რა განსხვავებაა ?. და ?? შორის?",
+    "back": "?. უსაფრთხოდ ცდილობს წევრზე წვდომას null-ის შემთხვევაში; ?? null-ის შემთხვევაში ალტერნატიულ მნიშვნელობას ირჩევს."
+  },
+  {
+    "front": "რა განსხვავებაა ?? და ??= შორის?",
+    "back": "?? აბრუნებს fallback მნიშვნელობას; ??= კი null-ის შემთხვევაში ცვლადში fallback-ს წერს."
+  },
+  {
+    "front": "რატომ შეიძლება string reference type იყოს, მაგრამ value-like ქცევა ჰქონდეს?",
+    "back": "string არის reference type, მაგრამ immutable-ია; მისი შეცვლის ოპერაციები ჩვეულებრივ ახალ string ობიექტს ქმნის, ამიტომ ხშირად value-სავით აღიქმება."
+  },
+  {
+    "front": "რა არის immutability string-ის შემთხვევაში?",
+    "back": "შექმნილი string-ის შიგთავსი პირდაპირ არ იცვლება; თითქოს ცვლილება ხდება, მაგრამ რეალურად ახალი string შეიძლება შეიქმნას."
+  },
+  {
+    "front": "რა არის static წევრი?",
+    "back": "static წევრი ეკუთვნის class-ს და არა კონკრეტულ instance-ს."
+  },
+  {
+    "front": "როგორ ვიყენებთ static method-ს?",
+    "back": "მაგალითად MathHelper.Add(2, 3), თუ Add static-ად არის გამოცხადებული."
+  },
+  {
+    "front": "რა განსხვავებაა static და instance member-ს შორის?",
+    "back": "Instance member კონკრეტულ object-ს ეკუთვნის და ჩვეულებრივ object-ის საშუალებით გამოიყენება; static member class-ს ეკუთვნის და object-ის გარეშე გამოიყენება."
+  },
+  {
+    "front": "რა არის static field?",
+    "back": "static field-ის ერთი საერთო მნიშვნელობა ეკუთვნის class-ს და არა თითოეულ object-ს ცალ-ცალკე."
+  },
+  {
+    "front": "თუ სამი object გვაქვს და static Count field გავზარდეთ, რამდენი Count არსებობს?",
+    "back": "ამ class-ისთვის ერთი საერთო static Count არსებობს; ყველა instance მას იზიარებს."
+  },
+  {
+    "front": "რა არის const?",
+    "back": "const არის compile-time constant, რომლის მნიშვნელობა გამოცხადების შემდეგ ვერ იცვლება."
+  },
+  {
+    "front": "const implicit static არის?",
+    "back": "დიახ, const წევრი class-ის დონეზეა და instance-ის შექმნა არ სჭირდება."
+  },
+  {
+    "front": "შეიძლება const-ის მნიშვნელობის შეცვლა constructor-ში?",
+    "back": "არა. const უნდა იყოს compile-time constant და constructor-ში ვერ მიენიჭება."
+  },
+  {
+    "front": "რა არის readonly?",
+    "back": "readonly field-ის მინიჭება შეიძლება declaration-ისას ან constructor-ში, შემდეგ კი მისი ხელახლა მინიჭება აღარ შეიძლება."
+  },
+  {
+    "front": "რა განსხვავებაა const-სა და readonly-ს შორის?",
+    "back": "const არის compile-time constant და ერთნაირი class-level მნიშვნელობა აქვს; readonly შეიძლება runtime-ზე constructor-ში განისაზღვროს და სხვადასხვა instance-ს სხვადასხვა მნიშვნელობა ჰქონდეს."
+  },
+  {
+    "front": "შეიძლება ორ Student object-ს განსხვავებული readonly Id ჰქონდეს?",
+    "back": "დიახ. მაგალითად თითო constructor-ს თავისი id გადასცეთ."
+  },
+  {
+    "front": "სად შეიძლება readonly field-ის მინიჭება?",
+    "back": "მის declaration-ში ან instance constructor-ში; შესაბამის შემთხვევაში static readonly-ს static constructor-შიც."
+  },
+  {
+    "front": "რა არის ref?",
+    "back": "ref parameter ნიშნავს, რომ მეთოდი იღებს არსებული ცვლადის reference-ს და შეუძლია მისი ორიგინალი მნიშვნელობის შეცვლა."
+  },
+  {
+    "front": "რა მოთხოვნა აქვს ref არგუმენტს?",
+    "back": "ref-ით გადაცემული ცვლადი წინასწარ უნდა იყოს ინიციალიზებული."
+  },
+  {
+    "front": "რას აკეთებს ref მაგალითში Change(ref x)?",
+    "back": "მეთოდი იღებს x-ის reference-ს და x-ის ორიგინალ მნიშვნელობას პირდაპირ შეიძლება შეცვალოს."
+  },
+  {
+    "front": "რა არის out?",
+    "back": "out parameter გამოიყენება იმისთვის, რომ მეთოდმა caller-ის ცვლადში შედეგი ჩაწეროს."
+  },
+  {
+    "front": "რა განსხვავებაა ref-სა და out-ს შორის?",
+    "back": "ref-ისას ცვლადს წინასწარ მნიშვნელობა უნდა ჰქონდეს და მეთოდს მისი წაკითხვაც შეუძლია; out-ისას caller-ს წინასწარ ინიციალიზაცია არ სჭირდება, მაგრამ მეთოდმა დაბრუნებამდე აუცილებლად უნდა მიანიჭოს მნიშვნელობა."
+  },
+  {
+    "front": "out-ით გადაცემული ცვლადი მეთოდამდე უნდა იყოს ინიციალიზებული?",
+    "back": "არა."
+  },
+  {
+    "front": "out parameter-ს მეთოდი აუცილებლად უნდა მიანიჭოს მნიშვნელობა?",
+    "back": "დიახ, მეთოდმა ყველა execution path-ზე უნდა უზრუნველყოს out parameter-ის მინიჭება დაბრუნებამდე."
+  },
+  {
+    "front": "ref და out ორივე reference-ით გადაცემაა?",
+    "back": "დიახ, ორივე parameter passing-ისას caller-ის ცვლადთან პირდაპირ მუშაობის შესაძლებლობას იძლევა, მაგრამ მათი წესები განსხვავებულია."
+  },
+  {
+    "front": "რა არის exception?",
+    "back": "Exception არის runtime-ზე წარმოშობილი შეცდომის/გამონაკლისი მდგომარეობის ობიექტური წარმოდგენა, რომლის დამუშავებაც შესაძლებელია."
+  },
+  {
+    "front": "რას აკეთებს try?",
+    "back": "try-ში იწერება კოდი, რომლის შესრულებისას exception-ის წარმოშობის შესაძლებლობა არსებობს."
+  },
+  {
+    "front": "რას აკეთებს catch?",
+    "back": "catch იჭერს შესაბამის exception-ს და საშუალებას გვაძლევს ის დავამუშაოთ."
+  },
+  {
+    "front": "რას აკეთებს finally?",
+    "back": "finally ჩვეულებრივ სრულდება try/catch-ის შემდეგ და გამოიყენება cleanup-ისთვის, მიუხედავად იმისა, exception მოხდა თუ არა."
+  },
+  {
+    "front": "რას აკეთებს throw?",
+    "back": "throw აგდებს exception-ს ან არსებულ exception-ს ხელახლა აგდებს."
+  },
+  {
+    "front": "როგორ შევქმნათ exception ხელით?",
+    "back": "მაგალითად: throw new ArgumentException(\"Amount cannot be negative\");"
+  },
+  {
+    "front": "რატომ არ უნდა დავიჭიროთ ყოველთვის მხოლოდ Exception?",
+    "back": "ძალიან ფართო catch შეიძლება რეალური პრობლემები დამალოს. უკეთესია მოსალოდნელი კონკრეტული exception-ები დავიჭიროთ, როცა მათი დამუშავება ვიცით."
+  },
+  {
+    "front": "რა არის DivideByZeroException?",
+    "back": "Exception, რომელიც ჩვეულებრივ ჩნდება ნულზე გაყოფის მცდელობისას შესაბამის რიცხვით ოპერაციაში."
+  },
+  {
+    "front": "რა განსხვავებაა throw-სა და catch-ს შორის?",
+    "back": "catch exception-ს იჭერს/ამუშავებს; throw exception-ს აგდებს ან ხელახლა აგდებს."
+  },
+  {
+    "front": "რისთვის გამოიყენება finally პრაქტიკაში?",
+    "back": "რესურსების cleanup-ისთვის ან ისეთი კოდის გასაშვებად, რომელიც exception-ის მიუხედავად უნდა შესრულდეს."
+  },
+  {
+    "front": "რა არის ArgumentException?",
+    "back": "Exception, რომელიც ხშირად გამოიყენება მაშინ, როცა მეთოდისთვის გადაცემული არგუმენტი არასწორია."
+  },
+  {
+    "front": "რა არის exception handling?",
+    "back": "Exception handling არის exception-ების კონტროლირებული დამუშავება try/catch/finally და throw მექანიზმებით."
+  },
+  {
+    "front": "რა არის SOLID?",
+    "back": "SOLID არის object-oriented design-ის ხუთი პრინციპის ერთობლიობა, რომლებიც კოდის maintainability-სა და extensibility-ს გაუმჯობესებას ემსახურება."
+  },
+  {
+    "front": "რას ნიშნავს S SOLID-ში?",
+    "back": "Single Responsibility Principle."
+  },
+  {
+    "front": "რა არის Single Responsibility Principle?",
+    "back": "კლასს უნდა ჰქონდეს ერთი მთავარი პასუხისმგებლობა და ერთი ძირითადი მიზეზი ცვლილებისთვის."
+  },
+  {
+    "front": "SRP-ის ინტერვიუს მოკლე პასუხი?",
+    "back": "ერთი class — ერთი მთავარი პასუხისმგებლობა და ერთი ძირითადი მიზეზი, რის გამოც ის უნდა შეიცვალოს."
+  },
+  {
+    "front": "რატომ არღვევს Student-ში SaveToDatabase(), SendEmail() და CalculateSalary() ერთად ყოფნა SRP-ს?",
+    "back": "კლასს რამდენიმე განსხვავებული პასუხისმგებლობა აქვს: მონაცემთა მოდელი, persistence, notification და business calculation."
+  },
+  {
+    "front": "როგორ გავაუმჯობესოთ SRP-ის დამრღვევი class?",
+    "back": "პასუხისმგებლობები გავყოთ შესაბამის class-ებად, მაგალითად Student, StudentRepository და EmailService."
+  },
+  {
+    "front": "რას ნიშნავს O SOLID-ში?",
+    "back": "Open/Closed Principle."
+  },
+  {
+    "front": "რა არის Open/Closed Principle?",
+    "back": "კოდი უნდა იყოს ღია გაფართოებისთვის, მაგრამ დახურული არსებული ძირითადი კოდის მუდმივი მოდიფიკაციისთვის."
+  },
+  {
+    "front": "OCP-ის მარტივი მაგალითი?",
+    "back": "ახალი payment ტიპის დამატება ჯობს ახალი IPayment implementation-ის შექმნით, ვიდრე ერთი დიდი if/else კლასის მუდმივი შეცვლით."
+  },
+  {
+    "front": "რა არის interface OCP-ის კონტექსტში?",
+    "back": "Interface შეიძლება გახდეს საერთო abstraction, რომლის ახალი implementations-ით სისტემის გაფართოება ხდება."
+  },
+  {
+    "front": "რას ნიშნავს L SOLID-ში?",
+    "back": "Liskov Substitution Principle."
+  },
+  {
+    "front": "რა არის Liskov Substitution Principle?",
+    "back": "Derived type უნდა შეიძლებოდეს base type-ის ნაცვლად გამოყენება ისე, რომ პროგრამის მოსალოდნელი ქცევა არ დაირღვეს."
+  },
+  {
+    "front": "რატომ არის Penguin-ის Fly() მაგალითი LSP-ის პრობლემა?",
+    "back": "თუ Bird-ის კონტრაქტი ამბობს, რომ ყველა Bird-ს Fly შეუძლია, Penguin-ისთვის Fly-ის შეუძლებლობა/exception base abstraction-ს არღვევს."
+  },
+  {
+    "front": "LSP-ის ინტერვიუს მოკლე პასუხი?",
+    "back": "Derived class-მა base class-ის შემცვლელად მუშაობისას პროგრამის მოსალოდნელი ქცევა არ უნდა დაარღვიოს."
+  },
+  {
+    "front": "რას ნიშნავს I SOLID-ში?",
+    "back": "Interface Segregation Principle."
+  },
+  {
+    "front": "რა არის Interface Segregation Principle?",
+    "back": "კლიენტები არ უნდა იყვნენ იძულებული დამოკიდებული იყვნენ იმ მეთოდებზე, რომლებიც მათ არ სჭირდებათ."
+  },
+  {
+    "front": "რატომ ჯობს პატარა interface-ები დიდ interface-ს?",
+    "back": "კლასებს მხოლოდ საჭირო კონტრაქტების implementაცია უწევთ და ზედმეტი დამოკიდებულებები მცირდება."
+  },
+  {
+    "front": "რა არის ცუდი giant IAnimal interface-ის მაგალითში?",
+    "back": "თუ მას აქვს Eat, Walk და Fly და ყველა ცხოველს აიძულებს სამივე implement-ოს, ზოგი კლასი არასაჭირო მეთოდებს მიიღებს."
+  },
+  {
+    "front": "როგორ გავყოთ giant interface?",
+    "back": "შეიძლება პატარა კონკრეტულ interface-ებად, მაგალითად IEatable, IWalkable და IFlyable."
+  },
+  {
+    "front": "რას ნიშნავს D SOLID-ში?",
+    "back": "Dependency Inversion Principle."
+  },
+  {
+    "front": "რა არის Dependency Inversion Principle?",
+    "back": "High-level modules არ უნდა იყოს მიბმული low-level concrete implementations-ზე; ორივე უნდა იყოს დამოკიდებული abstractions-ზე."
+  },
+  {
+    "front": "რა არის abstraction DIP-ის კონტექსტში?",
+    "back": "მაგალითად INotificationService, რომლის უკან შეიძლება EmailService ან SmsService იდგეს."
+  },
+  {
+    "front": "რატომ არის new EmailService() პირდაპირ OrderService-ში DIP-ის პრობლემა?",
+    "back": "OrderService პირდაპირ concrete implementation-ზეა დამოკიდებული და სხვა notification implementation-ზე გადასვლა რთულდება."
+  },
+  {
+    "front": "როგორ ეხმარება interface DIP-ს?",
+    "back": "High-level class დამოკიდებული ხდება interface-ზე და არა კონკრეტულ EmailService-ზე."
+  },
+  {
+    "front": "რა არის dependency injection?",
+    "back": "Dependency Injection არის დამოკიდებულების class-ში გარედან მიწოდება, ხშირად constructor-ის საშუალებით."
+  },
+  {
+    "front": "რა არის constructor injection?",
+    "back": "Dependency-ს constructor-ის პარამეტრად ვაწვდით, მაგალითად OrderService(INotificationService notificationService)."
+  },
+  {
+    "front": "რატომ არის DI სასარგებლო?",
+    "back": "ამცირებს tight coupling-ს და აადვილებს implementation-ის შეცვლას, ტესტირებას და გაფართოებას."
+  },
+  {
+    "front": "SOLID-ის ხუთი პრინციპი ჩამოთვალე.",
+    "back": "S — Single Responsibility, O — Open/Closed, L — Liskov Substitution, I — Interface Segregation, D — Dependency Inversion."
+  },
+  {
+    "front": "რას ნიშნავს class BankAccount { public double balance; }?",
+    "back": "იქმნება BankAccount class, რომელსაც აქვს public double ტიპის balance field."
+  },
+  {
+    "front": "სად არის account BankAccount-ის მაგალითში?",
+    "back": "account ცვლადი უნდა შეიქმნას, მაგალითად BankAccount account = new BankAccount(); ამ ხაზში account არის reference variable."
+  },
+  {
+    "front": "BankAccount account = new BankAccount();-ში account object არის?",
+    "back": "არა. account არის reference variable. Object არის new BankAccount()-ით შექმნილი instance."
+  },
+  {
+    "front": "BankAccount account = new BankAccount();-ში პირველი BankAccount და new BankAccount() რატომ ჰგავს ერთმანეთს?",
+    "back": "პირველი BankAccount არის ცვლადის ტიპი; new BankAccount() არის ამ ტიპის ახალი object-ის შექმნის expression."
+  },
+  {
+    "front": "რა მოხდება account.balance = -1000000; თუ balance public არის?",
+    "back": "კოდი პირდაპირ შეცვლის balance-ს უარყოფით მნიშვნელობაზე, რადგან public field-ზე გარედან წვდომა ნებადართულია."
+  },
+  {
+    "front": "როგორ შევზღუდოთ BankAccount.balance-ის უარყოფით მნიშვნელობად დაყენება?",
+    "back": "balance შეიძლება გახდეს private და ცვლილება მოხდეს კონტროლირებული მეთოდით, მაგალითად Withdraw/Deposit, სადაც ვამოწმებთ წესებს."
+  },
+  {
+    "front": "რა არის backing field?",
+    "back": "Backing field არის field, რომელიც property-ის რეალურ მნიშვნელობას ინახავს, მაგალითად private int age; და public int Age { get; set; }."
+  },
+  {
+    "front": "რა არის auto-property?",
+    "back": "Property, რომელსაც compiler-ის მიერ შექმნილი backing storage აქვს, მაგალითად public string Name { get; set; }."
+  },
+  {
+    "front": "რას ნიშნავს public int Age { get; private set; }?",
+    "back": "Age გარედან წაკითხვადია, მაგრამ მისი შეცვლა გარედან შეუძლებელია; set-ის გამოყენება მხოლოდ class-ის შიგნით შეიძლება."
+  },
+  {
+    "front": "რატომ შეიძლება property-ზე validation დავამატოთ?",
+    "back": "იმისთვის, რომ ობიექტში მხოლოდ დასაშვები მდგომარეობა შევინარჩუნოთ."
+  },
+  {
+    "front": "რა არის invariant ობიექტის კონტექსტში?",
+    "back": "წესი/პირობა, რომელიც ობიექტის ვალიდურ მდგომარეობაში უნდა იყოს დაცული, მაგალითად BankAccount balance-ის გარკვეული შეზღუდვა."
+  },
+  {
+    "front": "რა არის data hiding?",
+    "back": "შიდა მონაცემების პირდაპირი წვდომის დამალვა და მათზე კონტროლირებული API-ის შეთავაზება."
+  },
+  {
+    "front": "რა განსხვავებაა abstraction-სა და encapsulation-ს შორის?",
+    "back": "Abstraction ყურადღებას ამახვილებს იმაზე, რა შესაძლებლობას ვაძლევთ მომხმარებელს და რა დეტალებს ვმალავთ; encapsulation კი მდგომარეობისა და ქცევის ერთობლივ ორგანიზებას და შიდა მდგომარეობაზე წვდომის კონტროლს ეხება."
+  },
+  {
+    "front": "რა განსხვავებაა inheritance-სა და composition-ს შორის?",
+    "back": "Inheritance არის is-a ურთიერთობა და ტიპობრივი იერარქია; composition არის has-a ურთიერთობა, როცა ობიექტი სხვა ობიექტებს იყენებს/შეიცავს."
+  },
+  {
+    "front": "რა განსხვავებაა association-სა და inheritance-ს შორის?",
+    "back": "Association უბრალოდ ობიექტებს შორის ურთიერთობაა; inheritance კი ტიპობრივი parent-child კავშირია."
+  },
+  {
+    "front": "რა განსხვავებაა object-სა და reference-ს შორის?",
+    "back": "Object არის რეალური instance მეხსიერებაში; reference არის ცვლადი/მნიშვნელობა, რომელიც ამ object-ზე მიუთითებს."
+  },
+  {
+    "front": "რა განსხვავებაა variable-სა და object-ს შორის?",
+    "back": "Variable არის სახელით/ტიპით განსაზღვრული storage/reference, object კი შექმნილი runtime instance."
+  },
+  {
+    "front": "რა განსხვავებაა field-სა და local variable-ს შორის?",
+    "back": "Field class-ის წევრია და object/class-ის მდგომარეობას წარმოადგენს; local variable მეთოდის/ბლოკის შიგნით არსებობს."
+  },
+  {
+    "front": "რა განსხვავებაა method-სა და constructor-ს შორის?",
+    "back": "Method აღწერს ოპერაციას და შეიძლება მრავალჯერ გამოიძახოს; constructor გამოიყენება object-ის შექმნისას საწყისი მდგომარეობის დასაყენებლად."
+  },
+  {
+    "front": "constructor-ს აქვს return type?",
+    "back": "არა. Constructor-ს არ აქვს return type, არც void."
+  },
+  {
+    "front": "შეიძლება constructor-ის overload?",
+    "back": "დიახ. კლასს შეიძლება ჰქონდეს რამდენიმე constructor განსხვავებული parameter list-ით."
+  },
+  {
+    "front": "შეიძლება constructor იყოს override?",
+    "back": "არა. Constructor-ები არ override-დება."
+  },
+  {
+    "front": "შეიძლება class იყოს private?",
+    "back": "Nested class შეიძლება იყოს private; top-level class-ის accessibility-ის წესები განსხვავდება და ჩვეულებრივ public ან internal გამოიყენება."
+  },
+  {
+    "front": "შეიძლება method იყოს private?",
+    "back": "დიახ."
+  },
+  {
+    "front": "შეიძლება property იყოს private?",
+    "back": "დიახ."
+  },
+  {
+    "front": "შეიძლება field იყოს static და private ერთდროულად?",
+    "back": "დიახ, მაგალითად private static int count;."
+  },
+  {
+    "front": "შეიძლება class იყოს abstract და ჰქონდეს constructor?",
+    "back": "დიახ. Abstract class-ს შეუძლია constructor ჰქონდეს; ის derived class-ის object-ის შექმნისას მონაწილეობს."
+  },
+  {
+    "front": "შეიძლება abstract class-ს ჰქონდეს private field?",
+    "back": "დიახ."
+  },
+  {
+    "front": "შეიძლება interface-ის გამოყენება reference-ის ტიპად?",
+    "back": "დიახ. მაგალითად ICar car = new Tesla();"
+  },
+  {
+    "front": "რას გვაძლევს interface reference?",
+    "back": "კოდს შეუძლია დამოკიდებული იყოს კონტრაქტზე და არა კონკრეტულ implementation-ზე."
+  },
+  {
+    "front": "Animal animal = new Dog(); რა არის compile-time ტიპი?",
+    "back": "ცვლადის compile-time ტიპია Animal."
+  },
+  {
+    "front": "Animal animal = new Dog(); რა არის runtime ტიპი?",
+    "back": "ობიექტის runtime ტიპია Dog."
+  },
+  {
+    "front": "Animal animal = new Dog(); animal.Speak() რომელი implementation შეიძლება გამოიძახოს?",
+    "back": "თუ Speak virtual/override-ია, runtime dispatch-ის გამო Dog-ის override შეიძლება შესრულდეს."
+  },
+  {
+    "front": "რა არის dynamic dispatch-ის იდეა?",
+    "back": "ვირტუალური მეთოდის არჩევა runtime object-ის რეალური ტიპის მიხედვით."
+  },
+  {
+    "front": "რა არის enum?",
+    "back": "enum არის სახელდებული, წინასწარ განსაზღვრული მნიშვნელობების ნაკრები."
+  },
+  {
+    "front": "რატომ ვიყენებთ enum-ს?",
+    "back": "როცა მნიშვნელობა შეზღუდულ არჩევანს წარმოადგენს, მაგალითად Admin, Teacher, Student."
+  },
+  {
+    "front": "მოიყვანე enum-ის მაგალითი.",
+    "back": "enum UserRole { Admin, Teacher, Student }"
+  },
+  {
+    "front": "რა არის enum-ის default პირველი მნიშვნელობა?",
+    "back": "თუ explicit value არ მივუთითეთ, პირველი წევრის underlying numeric მნიშვნელობა ჩვეულებრივ 0-ია."
+  },
+  {
+    "front": "რა განსხვავებაა enum-სა და magic integer-ს შორის?",
+    "back": "enum კოდს უფრო გასაგებს და ტიპობრივად კონტროლირებადს ხდის, ვიდრე უბრალოდ 0, 1, 2 მსგავსი რიცხვების გამოყენება."
+  },
+  {
+    "front": "როგორ გამოვიყენოთ enum ცვლადში?",
+    "back": "მაგალითად UserRole role = UserRole.Teacher;"
+  },
+  {
+    "front": "შეიძლება enum-ს explicit მნიშვნელობები ჰქონდეს?",
+    "back": "დიახ, მაგალითად Admin = 1, Teacher = 2."
+  },
+  {
+    "front": "რა არის type C#-ში?",
+    "back": "Type განსაზღვრავს რა სახის მნიშვნელობა/ობიექტია და რა ოპერაციები და წევრები შეიძლება მასთან გამოვიყენოთ."
+  },
+  {
+    "front": "რა არის variable?",
+    "back": "Variable არის სახელით იდენტიფიცირებული storage/reference, რომელსაც აქვს კონკრეტული type."
+  },
+  {
+    "front": "რა არის identifier?",
+    "back": "Identifier არის პროგრამაში ტიპის, ცვლადის, მეთოდის, property-ის, class-ის და სხვა სახელებისთვის გამოყენებული იდენტიფიკატორი."
+  },
+  {
+    "front": "Age და age ერთი და იგივე identifier-ებია?",
+    "back": "არა. C# case-sensitive-ია, ამიტომ Age და age განსხვავებული სახელებია."
+  },
+  {
+    "front": "რას ნიშნავს case-sensitive?",
+    "back": "დიდი და პატარა ასოები განსხვავებულად ითვლება; მაგალითად Name და name სხვადასხვა identifier-ებია."
+  },
+  {
+    "front": "რა არის compile time?",
+    "back": "ეტაპი, როცა C# კოდი კომპილირდება .NET-ისთვის შესაფერის ფორმატში და compiler ამოწმებს ბევრ შეცდომას/ტიპურ წესს."
+  },
+  {
+    "front": "რა არის runtime?",
+    "back": "პროგრამის რეალურად შესრულების პერიოდი."
+  },
+  {
+    "front": "რა არის compile-time error?",
+    "back": "შეცდომა, რომელსაც compiler პოულობს პროგრამის გაშვებამდე და რომლის არსებობისას შესაბამისი კოდი ჩვეულებრივ ვერ დაკომპილირდება."
+  },
+  {
+    "front": "რა არის runtime error?",
+    "back": "შეცდომა, რომელიც პროგრამის შესრულებისას ჩნდება, მაგალითად NullReferenceException."
+  },
+  {
+    "front": "რატომ არის ტიპიზაცია მნიშვნელოვანი C#-ში?",
+    "back": "ტიპები compiler-ს ეხმარება არასწორი ოპერაციების აღმოჩენაში და კოდის კონტროლირებადობაში."
+  },
+  {
+    "front": "როგორ ამოიცნობ SRP-ის დარღვევას ინტერვიუზე?",
+    "back": "თუ ერთ class-ს აქვს ერთმანეთისგან განსხვავებული პასუხისმგებლობები და სხვადასხვა მიზეზით შეიძლება გახდეს შესაცვლელი, SRP-ის დარღვევის ნიშნებია."
+  },
+  {
+    "front": "როგორ ამოიცნობ OCP-ის დარღვევას?",
+    "back": "თუ ახალი ტიპის/ქცევის დამატებისთვის მუდმივად უნდა შევცვალოთ დიდი ცენტრალური if/else ან switch, შეიძლება OCP-ის დარღვევა იყოს."
+  },
+  {
+    "front": "როგორ ამოიცნობ LSP-ის დარღვევას?",
+    "back": "თუ derived class ვერ იქცევა base class-ის მოსალოდნელი კონტრაქტის შესაბამისად, მაგალითად მეთოდს აზრს უცვლის ან მუდმივად exception-ს აგდებს, LSP შეიძლება ირღვეოდეს."
+  },
+  {
+    "front": "როგორ ამოიცნობ ISP-ის დარღვევას?",
+    "back": "თუ class-ს აიძულებენ implement-ოს ბევრი ისეთი მეთოდი, რომელიც არ სჭირდება, interface ზედმეტად დიდია."
+  },
+  {
+    "front": "როგორ ამოიცნობ DIP-ის დარღვევას?",
+    "back": "თუ high-level business class პირდაპირ ქმნის ან იყენებს კონკრეტულ low-level implementation-ს და abstraction არ არსებობს, DIP-ის პრობლემა შეიძლება იყოს."
+  },
+  {
+    "front": "SOLID-ის მიზანი არის თუ არა უბრალოდ ბევრი class-ის შექმნა?",
+    "back": "არა. მიზანია პასუხისმგებლობების, დამოკიდებულებებისა და გაფართოების უკეთესი დიზაინი; class-ების რაოდენობა თავისთავად მიზანი არ არის."
+  },
+  {
+    "front": "SRP და ISP ერთმანეთთან როგორ განსხვავდება?",
+    "back": "SRP class-ის პასუხისმგებლობებზეა; ISP interface-ის ზომასა და მომხმარებლებისთვის არასაჭირო მეთოდების იძულებით დამოკიდებულებაზე."
+  },
+  {
+    "front": "OCP და DIP ერთმანეთთან როგორ შეიძლება იყოს დაკავშირებული?",
+    "back": "Abstraction-ებზე დამოკიდებულება ხშირად საშუალებას იძლევა ახალი implementations დაემატოს არსებული high-level კოდის შეცვლის გარეშე."
+  },
+  {
+    "front": "რა მოხდება თუ class-ს საერთოდ არ დავუწერთ constructor-ს?",
+    "back": "კომპილატორმა შეიძლება შექმნას implicit parameterless constructor, თუ class-ში სხვა constructor-ები არ არის განსაზღვრული."
+  },
+  {
+    "front": "თუ class-ს ერთი parameterized constructor აქვს, შეიძლება new Student() ავტომატურად იმუშაოს?",
+    "back": "არა, parameterless constructor ავტომატურად აღარ ემატება იმ შემთხვევაში, როცა სხვა constructor უკვე თავად არის გამოცხადებული."
+  },
+  {
+    "front": "რა არის default value int-ისთვის?",
+    "back": "int-ის default value არის 0."
+  },
+  {
+    "front": "რა არის default value bool-ისთვის?",
+    "back": "bool-ის default value არის false."
+  },
+  {
+    "front": "რა არის default value reference type-ისთვის?",
+    "back": "reference type-ის default მნიშვნელობა არის null."
+  },
+  {
+    "front": "რა არის default value double-ისთვის?",
+    "back": "double-ის default value არის 0.0."
+  },
+  {
+    "front": "შეიძლება object-ის შექმნა new-ის გარეშე?",
+    "back": "ზოგიერთ შემთხვევაში შეიძლება უკვე არსებული object-ის reference-ის მიღება ან სხვა მექანიზმით object-ის მიწოდება; ჩვეულებრივი class instance-ის პირდაპირი შექმნის ტიპური ფორმაა new."
+  },
+  {
+    "front": "თუ b = a reference type-ზე, იქმნება ახალი object?",
+    "back": "არა. მხოლოდ reference კოპირდება; ახალი object არ იქმნება."
+  },
+  {
+    "front": "თუ b = a value type-ზე, იქმნება ახალი მნიშვნელობის ასლი?",
+    "back": "დიახ, value ჩვეულებრივ კოპირდება."
+  },
+  {
+    "front": "თუ reference type-ის property შევცვალეთ მეორე reference-ით, პირველი reference რას დაინახავს?",
+    "back": "თუ ორივე ერთ object-ზე მიუთითებს, პირველი reference-იც დაინახავს იმავე object-ის ახალ მდგომარეობას."
+  },
+  {
+    "front": "რა არის object state-ის პირდაპირი ცვლილების რისკი?",
+    "back": "თუ ცვლილება შეუზღუდავია, ობიექტი შეიძლება არასწორ ან დაუშვებელ მდგომარეობაში აღმოჩნდეს; encapsulation ამ რისკს ამცირებს."
+  },
+  {
+    "front": "რატომ არის private + controlled method კარგი BankAccount-ისთვის?",
+    "back": "რადგან class თავად აკონტროლებს balance-ის ცვლილების წესებს და გარედან პირდაპირი არასასურველი მნიშვნელობის ჩაწერა აღარ ხდება."
+  }
+]
