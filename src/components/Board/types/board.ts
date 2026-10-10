@@ -13,10 +13,14 @@ export type ListData = {
 
 export type StrokePoint = [number, number];
 
+/** Missing `kind` means a freehand pen stroke (older saved documents). */
+export type StrokeKind = "pen" | "line" | "rect" | "ellipse";
+
 export type Stroke = {
   color: string;
   width: number;
   points: StrokePoint[];
+  kind?: StrokeKind;
 };
 
 export type DrawingRecord = {
