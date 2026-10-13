@@ -14,6 +14,7 @@ model User {
   boards      Board[]
   flashTopics FlashTopic[]
   flashCards  FlashCard[]
+  quizzes     Quiz[]
   createdAt   DateTime     @default(now())
 }
 
@@ -23,6 +24,7 @@ model FlashTopic {
   userId    String
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   cards     FlashCard[]
+  quizzes   Quiz[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
@@ -103,6 +105,45 @@ model FlashCard {
 
   @@index([userId, createdAt])
   @@index([topicId, createdAt])
+}
+
+model Quiz {
+  id        String         @id @default(cuid())
+  title     String
+  topicId   String
+  topic     FlashTopic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([topicId, createdAt])
+}
+
+model QuizQuestion {
+  id        String       @id @default(cuid())
+  prompt    String
+  quizId    String
+  quiz      Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  order     Int
+  options   QuizOption[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([quizId, order])
+}
+
+model QuizOption {
+  id         String       @id @default(cuid())
+  text       String
+  correct    Boolean      @default(false)
+  questionId String
+  question   QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  order      Int
+
+  @@index([questionId, order])
 }
 
 model Document {

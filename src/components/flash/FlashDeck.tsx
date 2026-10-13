@@ -376,10 +376,10 @@ export function FlashDeck({
             {cards.length === 0
               ? "Write both sides, then click a card to flip it."
               : layout === "random"
-                ? "One card at a time · draw a new one from the database"
-                : query.trim()
-                  ? `${visible.length} of ${cards.length} ${cards.length === 1 ? "card" : "cards"}`
-                  : `${cards.length} ${cards.length === 1 ? "card" : "cards"} · click any card to flip it`}
+                  ? "One card at a time · draw a new one from the database"
+                  : query.trim()
+                    ? `${visible.length} of ${cards.length} ${cards.length === 1 ? "card" : "cards"}`
+                    : `${cards.length} ${cards.length === 1 ? "card" : "cards"} · click any card to flip it`}
           </p>
         </div>
         <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:w-auto lg:justify-end">
@@ -494,7 +494,7 @@ export function FlashDeck({
               <IconShuffle size={18} />
               Shuffle
             </Button>
-          ) : (
+          ) : layout === "random" ? (
             <Button
               type="button"
               variant="secondary"
@@ -504,7 +504,7 @@ export function FlashDeck({
               <IconStack size={18} />
               New random card
             </Button>
-          )}
+          ) : null}
           <Button type="button" variant="primary" onClick={openCreate}>
             <IconPlus size={18} />
             New card

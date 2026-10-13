@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 
 const NAV = [
   { href: "/", label: "Boards" },
-  { href: "/flash-cards", label: "Flash cards" },
+  { href: "/flash-cards", label: "Flash cards", short: "Cards" },
+  { href: "/quizzes", label: "Quiz" },
 ];
 
 export default function Header({ wide = false }: { wide?: boolean }) {
@@ -75,9 +76,9 @@ export default function Header({ wide = false }: { wide?: boolean }) {
                       : "text-ink-soft hover:bg-surface hover:text-ink"
                   }`}
                 >
-                  {item.href === "/flash-cards" ? (
+                  {"short" in item && item.short ? (
                     <>
-                      <span className="sm:hidden">Cards</span>
+                      <span className="sm:hidden">{item.short}</span>
                       <span className="hidden sm:inline">{item.label}</span>
                     </>
                   ) : (

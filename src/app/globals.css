@@ -507,20 +507,33 @@
     color: var(--color-ink);
   }
 
+  .quiz-copy {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    line-height: 1.45;
+    font-weight: 600;
+    color: inherit;
+  }
+
   .flash-deck[data-size="sm"] .flash-copy,
-  .flash-deck[data-size="sm"] .flash-field {
+  .flash-deck[data-size="sm"] .flash-field,
+  .flash-deck[data-size="sm"] .quiz-copy {
     font-size: 0.875rem;
     line-height: 1.45;
   }
 
   .flash-deck[data-size="lg"] .flash-copy,
-  .flash-deck[data-size="lg"] .flash-field {
+  .flash-deck[data-size="lg"] .flash-field,
+  .flash-deck[data-size="lg"] .quiz-copy {
     font-size: 1.5rem;
     line-height: 1.35;
   }
 
   .flash-deck[data-size="xl"] .flash-copy,
-  .flash-deck[data-size="xl"] .flash-field {
+  .flash-deck[data-size="xl"] .flash-field,
+  .flash-deck[data-size="xl"] .quiz-copy {
     font-size: 2.125rem;
     line-height: 1.25;
   }
