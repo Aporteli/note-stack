@@ -2,22 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { ownerId } from "@/lib/owner";
 
 const PATH = "/flash-cards";
 const QUIZZES_PATH = "/quizzes";
-
-async function ownerId() {
-  const existing = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-  if (existing) return existing.id;
-
-  const user = await prisma.user.create({
-    data: { email: "demo@example.com", name: "Demo User" },
-  });
-  return user.id;
-}
 
 function sides(front: string, back: string) {
   const frontText = front.trim();
@@ -32,11 +20,7 @@ function sides(front: string, back: string) {
 }
 
 export async function getFlashTopics() {
-  const user = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-  if (!user) return [];
+  const user = { id: await ownerId() };
 
   return prisma.flashTopic.findMany({
     where: { userId: user.id },
@@ -71,11 +55,7 @@ export async function deleteFlashTopic(id: string) {
 }
 
 export async function getFlashTopic(id: string) {
-  const user = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-  if (!user) return null;
+  const user = { id: await ownerId() };
 
   return prisma.flashTopic.findFirst({
     where: { id, userId: user.id },
@@ -84,11 +64,7 @@ export async function getFlashTopic(id: string) {
 }
 
 export async function getFlashCards(topicId: string) {
-  const user = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-  if (!user) return [];
+  const user = { id: await ownerId() };
 
   return prisma.flashCard.findMany({
     where: { userId: user.id, topicId },
@@ -102,11 +78,7 @@ export async function getRandomFlashCard(
   excludeIds: string[] = [],
   allowRepeat = true,
 ) {
-  const user = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-  if (!user) return null;
+  const user = { id: await ownerId() };
 
   const unique = [...new Set(excludeIds.filter(Boolean))];
   const base = { userId: user.id, topicId };
@@ -219,11 +191,7 @@ const quizSelect = {
 };
 
 export async function getQuizzes(topicId: string): Promise<QuizData[]> {
-  const user = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-  if (!user) return [];
+  const user = { id: await ownerId() };
 
   return prisma.quiz.findMany({
     where: { userId: user.id, topicId },
@@ -238,11 +206,7 @@ export type QuizListItem = QuizData & {
 };
 
 export async function getAllQuizzes(): Promise<QuizListItem[]> {
-  const user = await prisma.user.findFirst({
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-  if (!user) return [];
+  const user = { id: await ownerId() };
 
   const quizzes = await prisma.quiz.findMany({
     where: { userId: user.id },

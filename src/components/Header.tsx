@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signUpWithGoogle } from "@/app/auth-actions";
 
 const NAV = [
   { href: "/", label: "Boards" },
@@ -94,12 +95,15 @@ export default function Header({ wide = false }: { wide?: boolean }) {
           <span className="hidden text-sm text-ink-soft sm:inline">
             Your workspace
           </span>
-          <button
-            type="button"
-            className="rounded-md bg-plum px-3 py-2 text-sm font-semibold text-ink-invert shadow transition-colors hover:bg-plum/80 sm:px-4"
-          >
-            Login
-          </button>
+          <form action={signUpWithGoogle}>
+            <button
+              type="submit"
+              className="rounded-md bg-plum px-3 py-2 text-sm font-semibold text-ink-invert shadow transition-colors hover:bg-plum/80 sm:px-4"
+            >
+              <span className="sm:hidden">Google</span>
+              <span className="hidden sm:inline">Sign up with Google</span>
+            </button>
+          </form>
         </div>
       </div>
     </header>

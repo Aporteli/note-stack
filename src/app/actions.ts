@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { ownerId } from "@/lib/owner";
 import { revalidatePath } from "next/cache";
 import type { ItemRef, TrashBundle } from "@/components/Board/types/board";
 
@@ -12,17 +13,16 @@ const isTempId = (id: string) => id.startsWith("temp-");
 /* -------------------- BOARDS -------------------- */
 
 export async function getBoards() {
-  return prisma.board.findMany({ orderBy: { createdAt: "desc" } });
+  const userId = await ownerId();
+  return prisma.board.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 export async function createBoard(title: string) {
-  let user = await prisma.user.findFirst();
-  if (!user) {
-    user = await prisma.user.create({
-      data: { email: "demo@example.com", name: "Demo User" },
-    });
-  }
-  const board = await prisma.board.create({ data: { title, userId: user.id } });
+  const userId = await ownerId();
+  const board = await prisma.board.create({ data: { title, userId } });
   revalidatePath("/");
   return board;
 }
