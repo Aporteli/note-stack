@@ -16,10 +16,9 @@ export default async function WeekPage() {
   return (
     <main className="flex h-dvh flex-col overflow-hidden bg-paper text-ink">
       <Header wide />
-      <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-3 py-4 sm:px-6 sm:py-5">
-        <header className="mb-3 shrink-0">
-          <p className="text-sm font-medium text-plum">Week</p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+      <div className="flex min-h-0 w-full flex-1 flex-col px-3 py-3 sm:px-4">
+        <header className="mb-2 shrink-0">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
             Your week
           </h1>
         </header>

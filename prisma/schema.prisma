@@ -24,12 +24,12 @@ model WeekSlot {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   day       Int
-  hour      Int
+  startMin  Int
+  endMin    Int
   task      String
   updatedAt DateTime @updatedAt
 
-  @@unique([userId, day, hour])
-  @@index([userId])
+  @@index([userId, day])
 }
 
 model FlashTopic {
