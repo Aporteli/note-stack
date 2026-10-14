@@ -15,7 +15,21 @@ model User {
   flashTopics FlashTopic[]
   flashCards  FlashCard[]
   quizzes     Quiz[]
+  weekSlots   WeekSlot[]
   createdAt   DateTime     @default(now())
+}
+
+model WeekSlot {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  day       Int
+  hour      Int
+  task      String
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, day, hour])
+  @@index([userId])
 }
 
 model FlashTopic {

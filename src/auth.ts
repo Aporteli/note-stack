@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Google],
   trustHost: true,
+  secret: process.env.AUTH_SECRET,
+  session: { strategy: "jwt" },
   callbacks: {
     async signIn({ user }) {
       const email = user.email;

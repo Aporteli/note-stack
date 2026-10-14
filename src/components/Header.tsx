@@ -1,17 +1,11 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signUpWithGoogle } from "@/app/auth-actions";
+import { auth } from "@/auth";
+import { signOutUser, signUpWithGoogle } from "@/app/auth-actions";
+import HeaderNav from "@/components/HeaderNav";
 
-const NAV = [
-  { href: "/", label: "Boards" },
-  { href: "/flash-cards", label: "Flash cards", short: "Cards" },
-  { href: "/quizzes", label: "Quiz" },
-];
-
-export default function Header({ wide = false }: { wide?: boolean }) {
-  const pathname = usePathname();
+export default async function Header({ wide = false }: { wide?: boolean }) {
+  const session = await auth();
+  const account = session?.user?.name || session?.user?.email;
 
   return (
     <header className="shrink-0 border-b border-ink/10 bg-paper/95">
@@ -60,50 +54,35 @@ export default function Header({ wide = false }: { wide?: boolean }) {
             </span>
           </Link>
 
-          <nav className="flex items-center gap-1" aria-label="Workspace">
-            {NAV.map((item) => {
-              const active =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`whitespace-nowrap rounded-md px-2 py-1.5 text-sm font-medium transition-colors sm:px-3 ${
-                    active
-                      ? "bg-surface text-ink"
-                      : "text-ink-soft hover:bg-surface hover:text-ink"
-                  }`}
-                >
-                  {"short" in item && item.short ? (
-                    <>
-                      <span className="sm:hidden">{item.short}</span>
-                      <span className="hidden sm:inline">{item.label}</span>
-                    </>
-                  ) : (
-                    item.label
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
+          <HeaderNav />
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-          <span className="hidden text-sm text-ink-soft sm:inline">
-            Your workspace
-          </span>
-          <form action={signUpWithGoogle}>
-            <button
-              type="submit"
-              className="rounded-md bg-plum px-3 py-2 text-sm font-semibold text-ink-invert shadow transition-colors hover:bg-plum/80 sm:px-4"
-            >
-              <span className="sm:hidden">Google</span>
-              <span className="hidden sm:inline">Sign up with Google</span>
-            </button>
-          </form>
+          {account ? (
+            <>
+              <span className="max-w-[9rem] truncate text-sm font-medium text-ink sm:max-w-[16rem]">
+                {account}
+              </span>
+              <form action={signOutUser}>
+                <button
+                  type="submit"
+                  className="rounded-md border border-ink/15 bg-white px-3 py-2 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-surface sm:px-4"
+                >
+                  Sign out
+                </button>
+              </form>
+            </>
+          ) : (
+            <form action={signUpWithGoogle}>
+              <button
+                type="submit"
+                className="rounded-md bg-plum px-3 py-2 text-sm font-semibold text-ink-invert shadow transition-colors hover:bg-plum/80 sm:px-4"
+              >
+                <span className="sm:hidden">Google</span>
+                <span className="hidden sm:inline">Sign up with Google</span>
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </header>
