@@ -16,11 +16,9 @@ export default async function WeekPage() {
   return (
     <main className="flex h-dvh flex-col overflow-hidden bg-paper text-ink">
       <Header wide />
-      <div className="flex min-h-0 w-full flex-1 flex-col px-3 py-3 sm:px-4">
+      <div className="flex min-h-0 w-full flex-1 flex-col px-3 pb-3 sm:px-4">
         <header className="mb-2 shrink-0">
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink">
-            Your week
-          </h1>
+        
         </header>
         <WeekSchedule slots={slots} />
       </div>
