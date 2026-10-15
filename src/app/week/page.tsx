@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Week · Note-Stack",
-  description: "Plan what you need to do each hour of the week.",
+  description: "Plan what you need to do through the week.",
 };
 
 export default async function WeekPage() {

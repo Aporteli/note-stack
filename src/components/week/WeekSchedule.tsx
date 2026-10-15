@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import {
   createSlot,
   replaceDay,
@@ -19,8 +26,15 @@ const DAYS = [
 ] as const;
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
-const ROW = 48;
+const SLOT_MINUTES = 5;
+const SLOTS_PER_HOUR = 60 / SLOT_MINUTES;
+const SLOT_H = 40;
+const ROW = SLOT_H * SLOTS_PER_HOUR;
 const DAY_MINUTES = 24 * 60;
+const SNAP = SLOT_MINUTES;
+const MIN_DURATION = SLOT_MINUTES;
+/** `<input type="time">` counts step in seconds, so 60 is one minute. */
+const TIME_STEP = 60;
 
 function hourLabel(hour: number) {
   const h = hour % 12 || 12;
@@ -52,6 +66,30 @@ function fitRange(startMin: number, endMin: number) {
   return { startMin: start, endMin: end };
 }
 
+function snapTo(minutes: number, step = SNAP) {
+  return Math.round(minutes / step) * step;
+}
+
+function shiftRange(startMin: number, endMin: number, delta: number) {
+  const duration = Math.max(1, endMin - startMin);
+  const start = Math.max(0, Math.min(DAY_MINUTES - duration, startMin + delta));
+  return { startMin: start, endMin: start + duration };
+}
+
+function resizeEdge(
+  startMin: number,
+  endMin: number,
+  edge: "start" | "end",
+  delta: number,
+) {
+  if (edge === "start") {
+    const start = Math.max(0, Math.min(endMin - MIN_DURATION, startMin + delta));
+    return { startMin: start, endMin };
+  }
+  const end = Math.min(DAY_MINUTES, Math.max(startMin + MIN_DURATION, endMin + delta));
+  return { startMin, endMin: end };
+}
+
 export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
   const [events, setEvents] = useState<WeekSlotData[]>(slots);
   const [day, setDay] = useState(0);
@@ -71,6 +109,9 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
   const rangeRef = useRef({ startMin, endMin, day });
   const gridRef = useRef<HTMLDivElement>(null);
   const creating = useRef(new Set<string>());
+  const ignoreClick = useRef(false);
+  const stopDrag = useRef<(() => void) | null>(null);
+  const draggingId = useRef<string | null>(null);
 
   eventsRef.current = events;
   selectedRef.current = selectedId;
@@ -84,10 +125,11 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
     const date = new Date();
     const today = (date.getDay() + 6) % 7;
     const minutes = date.getHours() * 60 + date.getMinutes();
+    const snapped = Math.floor(minutes / SNAP) * SNAP;
     setNow({ day: today, minutes });
     setDay(today);
-    setStartMin(date.getHours() * 60);
-    setEndMin(Math.min(DAY_MINUTES, date.getHours() * 60 + 60));
+    setStartMin(snapped);
+    setEndMin(Math.min(DAY_MINUTES, snapped + 60));
     setCopyTo((today + 1) % 7);
     if (date.getHours() < 6) setOvernight(true);
   }, []);
@@ -95,7 +137,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
   useEffect(() => {
     const handle = window.setTimeout(() => {
       const id = selectedRef.current;
-      if (!id) return;
+      if (!id || draggingId.current === id) return;
       const current = eventsRef.current.find((event) => event.id === id);
       if (!current) return;
       const next = fitRange(rangeRef.current.startMin, rangeRef.current.endMin);
@@ -123,6 +165,8 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
     }, 400);
     return () => window.clearTimeout(handle);
   }, [draft, startMin, endMin, day, selectedId]);
+
+  useEffect(() => () => stopDrag.current?.(), []);
 
   useEffect(() => {
     if (!editorOpen) return;
@@ -238,6 +282,84 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
     setEndMin(fitted.endMin);
   }
 
+  function writeTimes(id: string, start: number, end: number, save: boolean) {
+    const current = eventsRef.current.find((item) => item.id === id);
+    if (!current) return;
+    const fitted = fitRange(start, end);
+    const task = selectedRef.current === id ? draftRef.current : current.task;
+    const updated = { ...current, startMin: fitted.startMin, endMin: fitted.endMin, task };
+    const same =
+      fitted.startMin === current.startMin &&
+      fitted.endMin === current.endMin &&
+      task === current.task;
+    if (!same) {
+      const next = eventsRef.current.map((item) => (item.id === id ? updated : item));
+      eventsRef.current = next;
+      setEvents(next);
+      if (selectedRef.current === id) {
+        setStartMin(fitted.startMin);
+        setEndMin(fitted.endMin);
+      }
+    }
+    if (save) void flush(updated);
+  }
+
+  function startGesture(
+    pointer: ReactPointerEvent,
+    slot: WeekSlotData,
+    edge: "move" | "start" | "end",
+  ) {
+    if (pointer.button !== 0) return;
+    pointer.stopPropagation();
+    stopDrag.current?.();
+    const originY = pointer.clientY;
+    const originStart = slot.startMin;
+    const originEnd = slot.endMin;
+    let dragged = false;
+    let stopped = false;
+    let lastDelta: number | null = null;
+    let latest = { startMin: originStart, endMin: originEnd };
+
+    function onMove(ev: PointerEvent) {
+      const dy = ev.clientY - originY;
+      if (!dragged && Math.abs(dy) < 4) return;
+      if (!dragged) draggingId.current = slot.id;
+      dragged = true;
+      ev.preventDefault();
+      const delta = snapTo((dy / ROW) * 60);
+      if (delta === lastDelta) return;
+      lastDelta = delta;
+      latest =
+        edge === "move"
+          ? shiftRange(originStart, originEnd, delta)
+          : resizeEdge(originStart, originEnd, edge, delta);
+      writeTimes(slot.id, latest.startMin, latest.endMin, false);
+    }
+
+    function finish(commit: boolean) {
+      if (stopped) return;
+      stopped = true;
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", finishDrag);
+      window.removeEventListener("pointercancel", finishDrag);
+      if (stopDrag.current === finishDrag) stopDrag.current = null;
+      const shouldSave = commit && dragged;
+      draggingId.current = null;
+      if (!shouldSave) return;
+      ignoreClick.current = true;
+      writeTimes(slot.id, latest.startMin, latest.endMin, true);
+    }
+
+    function finishDrag() {
+      finish(true);
+    }
+
+    stopDrag.current = finishDrag;
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", finishDrag);
+    window.addEventListener("pointercancel", finishDrag);
+  }
+
   function copyDay() {
     if (copyTo === day) return;
     const rows = eventsRef.current
@@ -257,6 +379,23 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
       const next = [...eventsRef.current.filter((event) => event.day !== copyTo), ...saved];
       eventsRef.current = next;
       setEvents(next);
+    });
+  }
+
+  function deleteTask() {
+    const id = selectedRef.current;
+    if (!id) return;
+    const current = eventsRef.current.find((event) => event.id === id);
+    selectedRef.current = null;
+    const next = eventsRef.current.filter((event) => event.id !== id);
+    eventsRef.current = next;
+    setEvents(next);
+    setSelectedId(null);
+    setDraft("");
+    setEditorOpen(false);
+    if (!current || current.id.startsWith("temp-")) return;
+    startTransition(async () => {
+      await updateSlot(current.id, current.day, current.startMin, current.endMin, "");
     });
   }
 
@@ -294,21 +433,27 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
         className={`relative ${wide ? "border-l border-line" : ""}`}
         style={{ height: columnHeight }}
       >
-        {visibleHours.map((value, index) => (
-          <button
-            key={value}
-            type="button"
-            data-hour={value}
-            onClick={() => begin(dayId, value * 60)}
-            className={`absolute inset-x-0 border-b border-line text-left hover:bg-surface/80 ${
-              now?.day === dayId && Math.floor(now.minutes / 60) === value
-                ? "bg-surface/70"
-                : ""
-            }`}
-            style={{ top: index * ROW, height: ROW }}
-            aria-label={`Add on ${DAYS[dayId]?.label} at ${hourLabel(value)}`}
-          />
-        ))}
+        {visibleHours.flatMap((value, index) =>
+          Array.from({ length: SLOTS_PER_HOUR }, (_, slot) => {
+            const minute = slot * SLOT_MINUTES;
+            const start = value * 60 + minute;
+            const current =
+              now?.day === dayId && now.minutes >= start && now.minutes < start + SLOT_MINUTES;
+            return (
+              <button
+                key={start}
+                type="button"
+                data-hour={slot === 0 ? value : undefined}
+                onClick={() => begin(dayId, start)}
+                className={`absolute inset-x-0 border-b text-left hover:bg-surface/80 ${
+                  slot === SLOTS_PER_HOUR - 1 ? "border-line" : "border-dashed border-line/50"
+                } ${current ? "bg-surface/70" : ""}`}
+                style={{ top: index * ROW + slot * SLOT_H, height: SLOT_H }}
+                aria-label={`Add on ${DAYS[dayId]?.label} at ${clock(start)}`}
+              />
+            );
+          }),
+        )}
         {now?.day === dayId && now.minutes >= visibleStart ? (
           <div
             className="pointer-events-none absolute right-0 left-0 z-10 h-px bg-coral"
@@ -323,26 +468,44 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
             <button
               key={event.id}
               type="button"
+              onPointerDown={(pointer) => {
+                if ((pointer.target as HTMLElement).closest("[data-resize]")) return;
+                startGesture(pointer, event, "move");
+              }}
               onClick={(click) => {
                 click.stopPropagation();
+                if (ignoreClick.current) {
+                  ignoreClick.current = false;
+                  return;
+                }
                 selectEvent(event);
               }}
-              className={`absolute right-1 left-1 z-20 overflow-hidden rounded-md px-1.5 py-0.5 text-left text-xs leading-4 ${
+              className={`group absolute right-1 left-1 z-20 cursor-grab touch-none overflow-hidden rounded-md px-1.5 py-0.5 text-left text-xs leading-4 select-none active:cursor-grabbing ${
                 selected
                   ? "bg-orchid-100 text-ink ring-1 ring-orchid"
                   : "bg-surface text-ink hover:bg-surface-sunk"
               }`}
               style={{
-                top: ((start - visibleStart) / 60) * ROW + 2,
-                height: Math.max(((end - start) / 60) * ROW - 4, 22),
+                top: ((start - visibleStart) / 60) * ROW + 1,
+                height: Math.max(((end - start) / 60) * ROW - 2, 0),
               }}
             >
+              <span
+                data-resize="start"
+                className="absolute inset-x-0 top-0 z-10 h-2 cursor-ns-resize"
+                onPointerDown={(pointer) => startGesture(pointer, event, "start")}
+              />
               <span className="block truncate font-medium">
                 {event.task.trim() || "New task"}
               </span>
               <span className="block truncate text-ink-soft">
                 {rangeLabel(event.startMin, event.endMin)}
               </span>
+              <span
+                data-resize="end"
+                className="absolute inset-x-0 bottom-0 z-10 h-2 cursor-ns-resize"
+                onPointerDown={(pointer) => startGesture(pointer, event, "end")}
+              />
             </button>
           );
         })}
@@ -366,7 +529,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
               setDay(now.day);
               setSelectedId(null);
               setDraft("");
-              applyRange(Math.floor(now.minutes / 15) * 15, Math.floor(now.minutes / 15) * 15 + 60);
+              applyRange(now.minutes, now.minutes + 60);
             }}
             className="rounded-md border border-line bg-white px-3 py-1.5 text-sm font-medium text-ink shadow-sm hover:bg-surface"
           >
@@ -417,7 +580,8 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
               {visibleHours.map((value) => (
                 <div
                   key={value}
-                  className="flex h-12 items-start border-b border-line px-2 pt-1 text-xs font-medium text-ink-soft"
+                  className="flex items-start border-b border-line px-2 pt-1 text-xs font-medium text-ink-soft"
+                  style={{ height: ROW }}
                 >
                   {hourLabel(value)}
                 </div>
@@ -459,7 +623,8 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
                 <div
                   key={value}
                   data-hour={value}
-                  className="flex h-12 items-start border-b border-line bg-paper px-2 pt-1 text-xs font-medium text-ink-soft"
+                  className="flex items-start border-b border-line bg-paper px-2 pt-1 text-xs font-medium text-ink-soft"
+                  style={{ height: ROW }}
                 >
                   {hourLabel(value)}
                 </div>
@@ -497,7 +662,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
             Start
             <input
               type="time"
-              step={60}
+              step={TIME_STEP}
               value={clock(startMin)}
               onChange={(event) => {
                 const next = fromClock(event.target.value);
@@ -511,7 +676,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
             End
             <input
               type="time"
-              step={60}
+              step={TIME_STEP}
               value={endMin >= DAY_MINUTES ? "00:00" : clock(endMin)}
               onChange={(event) => {
                 const next = fromClock(event.target.value);
@@ -557,6 +722,14 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
             className="rounded-md bg-plum px-3 py-1.5 text-sm font-semibold text-ink-invert shadow-sm hover:bg-plum/80 disabled:opacity-40"
           >
             Copy day
+          </button>
+          <button
+            type="button"
+            onClick={deleteTask}
+            disabled={!selectedId}
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-danger hover:bg-surface disabled:opacity-40"
+          >
+            Delete task
           </button>
           <button
             type="button"
