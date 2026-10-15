@@ -480,7 +480,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
                 }
                 selectEvent(event);
               }}
-              className={`group absolute right-1 left-1 z-20 cursor-grab touch-none overflow-hidden rounded-md px-1.5 py-0.5 text-left text-xs leading-4 select-none active:cursor-grabbing ${
+              className={`group absolute flex flex-col items-start  right-1 left-1 z-20 cursor-grab touch-none overflow-hidden rounded-md px-1.5 py-0.5 text-left text-xs leading-4 select-none active:cursor-grabbing ${
                 selected
                   ? "bg-orchid-100 text-ink ring-1 ring-orchid"
                   : "bg-surface text-ink hover:bg-surface-sunk"
@@ -495,7 +495,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
                 className="absolute inset-x-0 top-0 z-10 h-2 cursor-ns-resize"
                 onPointerDown={(pointer) => startGesture(pointer, event, "start")}
               />
-              <span className="block truncate font-medium">
+              <span className="w-full min-w-0 font-medium whitespace-pre-wrap break-words">
                 {event.task.trim() || "New task"}
               </span>
               <span className="block truncate text-ink-soft">
