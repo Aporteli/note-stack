@@ -27,6 +27,7 @@ model WeekSlot {
   startMin  Int
   endMin    Int
   task      String
+  color     String   @default("surface")
   updatedAt DateTime @updatedAt
 
   @@index([userId, day])

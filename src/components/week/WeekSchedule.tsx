@@ -35,6 +35,22 @@ const SNAP = SLOT_MINUTES;
 const MIN_DURATION = SLOT_MINUTES;
 /** `<input type="time">` counts step in seconds, so 60 is one minute. */
 const TIME_STEP = 60;
+const TASK_COLORS = [
+  { id: "surface", swatch: "bg-surface", block: "bg-surface" },
+  { id: "orchid", swatch: "bg-orchid", block: "bg-orchid-100" },
+  { id: "coral", swatch: "bg-coral", block: "bg-coral/30" },
+  { id: "lagoon", swatch: "bg-lagoon", block: "bg-lagoon/30" },
+  { id: "mint", swatch: "bg-mint", block: "bg-mint/50" },
+  { id: "plum", swatch: "bg-plum", block: "bg-plum/25" },
+  { id: "dusk", swatch: "bg-dusk", block: "bg-dusk/30" },
+  { id: "indigo", swatch: "bg-indigo", block: "bg-indigo/30" },
+  { id: "amber", swatch: "bg-amber", block: "bg-amber/40" },
+  { id: "slate", swatch: "bg-slate", block: "bg-slate/25" },
+] as const;
+
+function taskColor(id: string) {
+  return TASK_COLORS.find((item) => item.id === id) ?? TASK_COLORS[0];
+}
 
 function hourLabel(hour: number) {
   const h = hour % 12 || 12;
@@ -95,6 +111,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
   const [day, setDay] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [color, setColor] = useState("surface");
   const [startMin, setStartMin] = useState(8 * 60);
   const [endMin, setEndMin] = useState(9 * 60);
   const [now, setNow] = useState<{ day: number; minutes: number } | null>(null);
@@ -106,6 +123,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
   const eventsRef = useRef(events);
   const selectedRef = useRef(selectedId);
   const draftRef = useRef(draft);
+  const colorRef = useRef(color);
   const rangeRef = useRef({ startMin, endMin, day });
   const gridRef = useRef<HTMLDivElement>(null);
   const creating = useRef(new Set<string>());
@@ -116,6 +134,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
   eventsRef.current = events;
   selectedRef.current = selectedId;
   draftRef.current = draft;
+  colorRef.current = color;
   rangeRef.current = { startMin, endMin, day };
 
   const visibleStart = overnight ? 0 : 6 * 60;
@@ -146,7 +165,8 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
         text.trim() === current.task &&
         next.startMin === current.startMin &&
         next.endMin === current.endMin &&
-        rangeRef.current.day === current.day
+        rangeRef.current.day === current.day &&
+        colorRef.current === current.color
       ) {
         return;
       }
@@ -156,6 +176,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
         startMin: next.startMin,
         endMin: next.endMin,
         task: text,
+        color: colorRef.current,
       };
       setEvents((list) => list.map((event) => (event.id === id ? updated : event)));
       eventsRef.current = eventsRef.current.map((event) =>
@@ -164,7 +185,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
       void flush(updated);
     }, 400);
     return () => window.clearTimeout(handle);
-  }, [draft, startMin, endMin, day, selectedId]);
+  }, [draft, startMin, endMin, day, selectedId, color]);
 
   useEffect(() => () => stopDrag.current?.(), []);
 
@@ -202,7 +223,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
       if (creating.current.has(event.id)) return;
       creating.current.add(event.id);
       startTransition(async () => {
-        const saved = await createSlot(event.day, event.startMin, event.endMin, text);
+        const saved = await createSlot(event.day, event.startMin, event.endMin, text, event.color);
         creating.current.delete(event.id);
         if (!saved) return;
         const latest = eventsRef.current.find((item) => item.id === event.id);
@@ -213,6 +234,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
               startMin: latest.startMin,
               endMin: latest.endMin,
               task: latest.task.trim() || saved.task,
+              color: latest.color || saved.color,
             }
           : saved;
         setEvents((list) => list.map((item) => (item.id === event.id ? merged : item)));
@@ -227,26 +249,36 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
           merged.startMin !== saved.startMin ||
           merged.endMin !== saved.endMin ||
           merged.task !== saved.task ||
-          merged.day !== saved.day
+          merged.day !== saved.day ||
+          merged.color !== saved.color
         ) {
-          await updateSlot(merged.id, merged.day, merged.startMin, merged.endMin, merged.task);
+          await updateSlot(
+            merged.id,
+            merged.day,
+            merged.startMin,
+            merged.endMin,
+            merged.task,
+            merged.color,
+          );
         }
       });
       return;
     }
     startTransition(async () => {
-      await updateSlot(event.id, event.day, event.startMin, event.endMin, text);
+      await updateSlot(event.id, event.day, event.startMin, event.endMin, text, event.color);
     });
   }
 
   function selectEvent(event: WeekSlotData) {
     selectedRef.current = event.id;
     draftRef.current = event.task;
+    colorRef.current = event.color || "surface";
     setConfirmClear(false);
     setEditorOpen(true);
     setSelectedId(event.id);
     setDay(event.day);
     setDraft(event.task);
+    setColor(colorRef.current);
     setStartMin(event.startMin);
     setEndMin(event.endMin);
   }
@@ -269,6 +301,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
       startMin: fitted.startMin,
       endMin: fitted.endMin,
       task,
+      color: "surface",
     };
     const next = [...pruned, created];
     eventsRef.current = next;
@@ -368,6 +401,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
         startMin: event.startMin,
         endMin: event.endMin,
         task: event.task,
+        color: event.color,
       }));
     const kept = eventsRef.current.filter((event) => event.day !== copyTo);
     eventsRef.current = kept;
@@ -464,6 +498,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
           const start = Math.max(event.startMin, visibleStart);
           const end = Math.min(event.endMin, DAY_MINUTES);
           const selected = event.id === selectedId;
+          const tone = taskColor(event.color).block;
           return (
             <button
               key={event.id}
@@ -480,11 +515,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
                 }
                 selectEvent(event);
               }}
-              className={`group absolute flex flex-col items-start  right-1 left-1 z-20 cursor-grab touch-none overflow-hidden rounded-md px-1.5 py-0.5 text-left text-xs leading-4 select-none active:cursor-grabbing ${
-                selected
-                  ? "bg-orchid-100 text-ink ring-1 ring-orchid"
-                  : "bg-surface text-ink hover:bg-surface-sunk"
-              }`}
+              className={`group absolute flex flex-col items-start border border-black/50 right-1 left-1 z-20 cursor-grab touch-none overflow-hidden rounded-md px-1.5 py-0.5 text-left text-xs leading-4 select-none active:cursor-grabbing ${tone} text-ink ${selected ? "ring-1 ring-orchid" : ""}`}
               style={{
                 top: ((start - visibleStart) / 60) * ROW + 1,
                 height: Math.max(((end - start) / 60) * ROW - 2, 0),
@@ -498,7 +529,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
               <span className="w-full min-w-0 font-medium whitespace-pre-wrap break-words">
                 {event.task.trim() || "New task"}
               </span>
-              <span className="block truncate text-ink-soft">
+              <span className="block truncate text-ink-soft mt-1">
                 {rangeLabel(event.startMin, event.endMin)}
               </span>
               <span
@@ -686,6 +717,23 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
               className="rounded-md border border-line bg-paper px-2 py-1 text-sm text-ink"
             />
           </label>
+          <div className="flex items-center gap-1" role="group" aria-label="Task color">
+            {TASK_COLORS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-label={item.id}
+                aria-pressed={color === item.id}
+                onClick={() => {
+                  colorRef.current = item.id;
+                  setColor(item.id);
+                }}
+                className={`size-5 rounded-full border ${item.swatch} ${
+                  color === item.id ? "ring-2 ring-ink" : "border-line"
+                }`}
+              />
+            ))}
+          </div>
         </div>
         <textarea
           value={draft}

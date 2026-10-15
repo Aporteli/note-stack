@@ -9,7 +9,25 @@ export type WeekSlotData = {
   startMin: number;
   endMin: number;
   task: string;
+  color: string;
 };
+
+const TASK_COLORS = new Set([
+  "surface",
+  "orchid",
+  "coral",
+  "lagoon",
+  "mint",
+  "plum",
+  "dusk",
+  "indigo",
+  "amber",
+  "slate",
+]);
+
+function cleanColor(color: string) {
+  return TASK_COLORS.has(color) ? color : "surface";
+}
 
 function validDay(day: number) {
   return Number.isInteger(day) && day >= 0 && day <= 6;
@@ -29,7 +47,7 @@ export async function getWeekSlots(): Promise<WeekSlotData[]> {
   const userId = await ownerId();
   return prisma.weekSlot.findMany({
     where: { userId },
-    select: { id: true, day: true, startMin: true, endMin: true, task: true },
+    select: { id: true, day: true, startMin: true, endMin: true, task: true, color: true },
     orderBy: [{ day: "asc" }, { startMin: "asc" }],
   });
 }
@@ -39,14 +57,15 @@ export async function createSlot(
   startMin: number,
   endMin: number,
   task: string,
+  color = "surface",
 ): Promise<WeekSlotData | null> {
   if (!validDay(day) || !validRange(startMin, endMin)) return null;
   const text = task.trim();
   if (!text) return null;
   const userId = await ownerId();
   return prisma.weekSlot.create({
-    data: { userId, day, startMin, endMin, task: text },
-    select: { id: true, day: true, startMin: true, endMin: true, task: true },
+    data: { userId, day, startMin, endMin, task: text, color: cleanColor(color) },
+    select: { id: true, day: true, startMin: true, endMin: true, task: true, color: true },
   });
 }
 
@@ -56,6 +75,7 @@ export async function updateSlot(
   startMin: number,
   endMin: number,
   task: string,
+  color = "surface",
 ) {
   if (!id || !validDay(day) || !validRange(startMin, endMin)) return;
   const userId = await ownerId();
@@ -66,13 +86,13 @@ export async function updateSlot(
   }
   await prisma.weekSlot.updateMany({
     where: { id, userId },
-    data: { day, startMin, endMin, task: text },
+    data: { day, startMin, endMin, task: text, color: cleanColor(color) },
   });
 }
 
 export async function replaceDay(
   day: number,
-  slots: { startMin: number; endMin: number; task: string }[],
+  slots: { startMin: number; endMin: number; task: string; color?: string }[],
 ): Promise<WeekSlotData[]> {
   if (!validDay(day)) return [];
   const userId = await ownerId();
@@ -91,6 +111,7 @@ export async function replaceDay(
               startMin: slot.startMin,
               endMin: slot.endMin,
               task: slot.task.trim(),
+              color: cleanColor(slot.color ?? "surface"),
             })),
           }),
         ]
@@ -99,7 +120,7 @@ export async function replaceDay(
 
   return prisma.weekSlot.findMany({
     where: { userId, day },
-    select: { id: true, day: true, startMin: true, endMin: true, task: true },
+    select: { id: true, day: true, startMin: true, endMin: true, task: true, color: true },
     orderBy: { startMin: "asc" },
   });
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "WeekSlot" ADD COLUMN "color" TEXT NOT NULL DEFAULT 'surface';
