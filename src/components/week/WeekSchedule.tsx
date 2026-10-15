@@ -16,13 +16,13 @@ import {
 } from "@/app/week/actions";
 
 const DAYS = [
-  { id: 0, short: "ორშ", label: "Monday" },
-  { id: 1, short: "სამ", label: "Tuesday" },
-  { id: 2, short: "ოთხ", label: "Wednesday" },
-  { id: 3, short: "ხუთ", label: "Thursday" },
-  { id: 4, short: "პარ", label: "Friday" },
-  { id: 5, short: "შაბ", label: "Saturday" },
-  { id: 6, short: "კვი", label: "Sunday" },
+  { id: 0, short: "ორშ", label: "ორშაბათი" },
+  { id: 1, short: "სამ", label: "სამშაბათი" },
+  { id: 2, short: "ოთხ", label: "ოთხშაბათი" },
+  { id: 3, short: "ხუთ", label: "ხუთშაბათი" },
+  { id: 4, short: "პარ", label: "პარასკევი" },
+  { id: 5, short: "შაბ", label: "შაბათი" },
+  { id: 6, short: "კვი", label: "კვირა" },
 ] as const;
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
