@@ -7,7 +7,7 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not set");
 }
 
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 9;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

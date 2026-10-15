@@ -15,8 +15,21 @@ model User {
   flashTopics FlashTopic[]
   flashCards  FlashCard[]
   quizzes     Quiz[]
+  weekPlans   WeekPlan[]
   weekSlots   WeekSlot[]
   createdAt   DateTime     @default(now())
+}
+
+model WeekPlan {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  order     Int        @default(0)
+  slots     WeekSlot[]
+  createdAt DateTime   @default(now())
+
+  @@index([userId])
 }
 
 model WeekSlot {
@@ -28,9 +41,12 @@ model WeekSlot {
   endMin    Int
   task      String
   color     String   @default("surface")
+  planId    String
+  plan      WeekPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
   updatedAt DateTime @updatedAt
 
   @@index([userId, day])
+  @@index([planId])
 }
 
 model FlashTopic {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
-import { WeekSchedule } from "@/components/week/WeekSchedule";
-import { getWeekSlots } from "./actions";
+import { WeekBoard } from "@/components/week/WeekSchedule";
+import { getWeekBoard } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function WeekPage() {
-  const slots = await getWeekSlots();
+  const { plans, slots } = await getWeekBoard();
 
   return (
     <main className="flex h-dvh flex-col overflow-hidden bg-paper text-ink">
@@ -20,7 +20,7 @@ export default async function WeekPage() {
         <header className="mb-2 shrink-0">
         
         </header>
-        <WeekSchedule slots={slots} />
+        <WeekBoard plans={plans} slots={slots} />
       </div>
     </main>
   );

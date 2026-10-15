@@ -10,8 +10,11 @@ import {
 } from "react";
 import {
   createSlot,
+  createWeekPlan,
+  renameWeekPlan,
   replaceDay,
   updateSlot,
+  type WeekPlanData,
   type WeekSlotData,
 } from "@/app/week/actions";
 
@@ -106,7 +109,7 @@ function resizeEdge(
   return { startMin, endMin: end };
 }
 
-export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
+export function WeekSchedule({ slots, planId }: { slots: WeekSlotData[]; planId: string }) {
   const [events, setEvents] = useState<WeekSlotData[]>(slots);
   const [day, setDay] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -223,7 +226,14 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
       if (creating.current.has(event.id)) return;
       creating.current.add(event.id);
       startTransition(async () => {
-        const saved = await createSlot(event.day, event.startMin, event.endMin, text, event.color);
+        const saved = await createSlot(
+          event.day,
+          event.startMin,
+          event.endMin,
+          text,
+          event.color,
+          planId,
+        );
         creating.current.delete(event.id);
         if (!saved) return;
         const latest = eventsRef.current.find((item) => item.id === event.id);
@@ -302,6 +312,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
       endMin: fitted.endMin,
       task,
       color: "surface",
+      planId,
     };
     const next = [...pruned, created];
     eventsRef.current = next;
@@ -409,7 +420,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
     setSelectedId(null);
     setDraft("");
     startTransition(async () => {
-      const saved = await replaceDay(copyTo, rows);
+      const saved = await replaceDay(copyTo, rows, planId);
       const next = [...eventsRef.current.filter((event) => event.day !== copyTo), ...saved];
       eventsRef.current = next;
       setEvents(next);
@@ -444,7 +455,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
     setDraft("");
     setConfirmClear(false);
     startTransition(async () => {
-      await replaceDay(day, []);
+      await replaceDay(day, [], planId);
     });
   }
 
@@ -790,6 +801,99 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
       </section>
       </div>
       ) : null}
+    </div>
+  );
+}
+
+export function WeekBoard({
+  plans,
+  slots,
+}: {
+  plans: WeekPlanData[];
+  slots: WeekSlotData[];
+}) {
+  const [list, setList] = useState(plans);
+  const [active, setActive] = useState(plans[0]?.id ?? "");
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState("");
+  const [adding, startAdding] = useTransition();
+
+  function commitRename() {
+    const id = editing;
+    const text = draftName.trim();
+    setEditing(null);
+    if (!id || !text) return;
+    setList((items) => items.map((item) => (item.id === id ? { ...item, name: text } : item)));
+    void renameWeekPlan(id, text);
+  }
+
+  function addPlan() {
+    startAdding(async () => {
+      const created = await createWeekPlan();
+      setList((items) => [...items, created]);
+      setActive(created.id);
+    });
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex shrink-0 gap-1 overflow-x-auto">
+        {list.map((plan) =>
+          editing === plan.id ? (
+            <input
+              key={plan.id}
+              value={draftName}
+              autoFocus
+              onChange={(event) => setDraftName(event.target.value)}
+              onBlur={commitRename}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") event.currentTarget.blur();
+                if (event.key === "Escape") setEditing(null);
+              }}
+              className="w-28 shrink-0 rounded-md bg-plum px-3 py-1.5 text-sm font-medium text-ink-invert outline-none"
+            />
+          ) : (
+            <button
+              key={plan.id}
+              type="button"
+              onClick={() => {
+                if (plan.id !== active) {
+                  setActive(plan.id);
+                  return;
+                }
+                setDraftName(plan.name);
+                setEditing(plan.id);
+              }}
+              className={`shrink-0 rounded-md px-3 py-1.5 text-sm font-medium ${
+                plan.id === active ? "bg-plum text-ink-invert" : "bg-surface text-ink-soft"
+              }`}
+            >
+              {plan.name}
+            </button>
+          ),
+        )}
+        <button
+          type="button"
+          onClick={addPlan}
+          disabled={adding}
+          className="shrink-0 rounded-md border border-line bg-white px-3 py-1.5 text-sm font-medium text-ink shadow-sm hover:bg-surface disabled:opacity-40"
+        >
+          New
+        </button>
+      </div>
+      {list.map((plan) => (
+        <div
+          key={plan.id}
+          className={
+            plan.id === active ? "flex min-h-0 flex-1 flex-col" : "hidden"
+          }
+        >
+          <WeekSchedule
+            planId={plan.id}
+            slots={slots.filter((slot) => slot.planId === plan.id)}
+          />
+        </div>
+      ))}
     </div>
   );
 }
