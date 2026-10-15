@@ -16,13 +16,13 @@ import {
 } from "@/app/week/actions";
 
 const DAYS = [
-  { id: 0, short: "Mon", label: "Monday" },
-  { id: 1, short: "Tue", label: "Tuesday" },
-  { id: 2, short: "Wed", label: "Wednesday" },
-  { id: 3, short: "Thu", label: "Thursday" },
-  { id: 4, short: "Fri", label: "Friday" },
-  { id: 5, short: "Sat", label: "Saturday" },
-  { id: 6, short: "Sun", label: "Sunday" },
+  { id: 0, short: "ორშ", label: "Monday" },
+  { id: 1, short: "სამ", label: "Tuesday" },
+  { id: 2, short: "ოთხ", label: "Wednesday" },
+  { id: 3, short: "ხუთ", label: "Thursday" },
+  { id: 4, short: "პარ", label: "Friday" },
+  { id: 5, short: "შაბ", label: "Saturday" },
+  { id: 6, short: "კვი", label: "Sunday" },
 ] as const;
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
@@ -647,7 +647,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
         aria-modal="true"
         aria-labelledby="week-editor-title"
         onClick={(event) => event.stopPropagation()}
-        className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-2xl border border-line bg-white p-3 shadow-sm sm:p-4"
+        className="min-h-[70dvh] w-full max-w-lg overflow-y-auto rounded-2xl border border-line bg-white p-3 shadow-sm sm:p-4"
       >
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <h2 id="week-editor-title" className="font-display text-lg font-semibold text-ink">{dayLabel}</h2>
@@ -695,7 +695,7 @@ export function WeekSchedule({ slots }: { slots: WeekSlotData[] }) {
             setDraft(value);
             if (!selectedRef.current && value.trim()) begin(day, startMin, value, endMin);
           }}
-          rows={3}
+          rows={18}
           placeholder="What needs to happen?"
           aria-label={`${dayLabel} from ${clock(startMin)} to ${clock(Math.min(endMin, DAY_MINUTES - 1))}`}
           className="w-full resize-none rounded-xl border border-line bg-paper px-3 py-2 text-sm leading-6 text-ink outline-none placeholder:text-ink-faint"
