@@ -15,6 +15,7 @@ model User {
   flashTopics FlashTopic[]
   flashCards  FlashCard[]
   quizzes     Quiz[]
+  quizFolders QuizFolder[]
   weekPlans   WeekPlan[]
   weekSlots   WeekSlot[]
   createdAt   DateTime     @default(now())
@@ -138,6 +139,21 @@ model FlashCard {
   @@index([topicId, createdAt])
 }
 
+model QuizFolder {
+  id        String       @id @default(cuid())
+  name      String
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    QuizFolder?  @relation("QuizFolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  QuizFolder[] @relation("QuizFolderTree")
+  quizzes   Quiz[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([userId, parentId])
+}
+
 model Quiz {
   id        String         @id @default(cuid())
   title     String
@@ -145,12 +161,15 @@ model Quiz {
   topic     FlashTopic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
   userId    String
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folderId  String?
+  folder    QuizFolder?    @relation(fields: [folderId], references: [id], onDelete: SetNull)
   questions QuizQuestion[]
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
   @@index([userId, createdAt])
   @@index([topicId, createdAt])
+  @@index([folderId])
 }
 
 model QuizQuestion {

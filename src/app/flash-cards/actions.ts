@@ -200,9 +200,16 @@ export async function getQuizzes(topicId: string): Promise<QuizData[]> {
   });
 }
 
+export type QuizFolderData = {
+  id: string;
+  name: string;
+  parentId: string | null;
+};
+
 export type QuizListItem = QuizData & {
   topicId: string;
   topicName: string;
+  folderId: string | null;
 };
 
 export async function getAllQuizzes(): Promise<QuizListItem[]> {
@@ -214,6 +221,7 @@ export async function getAllQuizzes(): Promise<QuizListItem[]> {
     select: {
       ...quizSelect,
       topicId: true,
+      folderId: true,
       topic: { select: { name: true } },
     },
   });
@@ -223,11 +231,105 @@ export async function getAllQuizzes(): Promise<QuizListItem[]> {
     title: quiz.title,
     topicId: quiz.topicId,
     topicName: quiz.topic.name,
+    folderId: quiz.folderId,
     questions: quiz.questions,
   }));
 }
 
-export async function createQuiz(topicId: string, title: string) {
+export async function getQuizFolders(): Promise<QuizFolderData[]> {
+  const userId = await ownerId();
+  return prisma.quizFolder.findMany({
+    where: { userId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, parentId: true },
+  });
+}
+
+export async function createQuizFolder(name: string, parentId: string | null) {
+  const trimmed = name.trim().slice(0, 80);
+  if (!trimmed) return { ok: false as const, error: "Name the group first." };
+  const userId = await ownerId();
+  if (parentId) {
+    const parent = await prisma.quizFolder.findFirst({
+      where: { id: parentId, userId },
+      select: { id: true },
+    });
+    if (!parent) return { ok: false as const, error: "That group is no longer here." };
+  }
+  const folder = await prisma.quizFolder.create({
+    data: { name: trimmed, userId, parentId },
+    select: { id: true },
+  });
+  revalidatePath(QUIZZES_PATH);
+  return { ok: true as const, id: folder.id };
+}
+
+export async function renameQuiz(id: string, title: string) {
+  const trimmed = title.trim().slice(0, 120);
+  if (!id || !trimmed) return;
+  const userId = await ownerId();
+  const quiz = await prisma.quiz.findFirst({
+    where: { id, userId },
+    select: { topicId: true },
+  });
+  if (!quiz) return;
+  await prisma.quiz.updateMany({
+    where: { id, userId },
+    data: { title: trimmed },
+  });
+  revalidatePath(`${PATH}/${quiz.topicId}`);
+  revalidatePath(QUIZZES_PATH);
+}
+
+export async function renameQuizFolder(id: string, name: string) {
+  const trimmed = name.trim().slice(0, 80);
+  if (!id || !trimmed) return;
+  const userId = await ownerId();
+  await prisma.quizFolder.updateMany({
+    where: { id, userId },
+    data: { name: trimmed },
+  });
+  revalidatePath(QUIZZES_PATH);
+}
+
+export async function deleteQuizFolder(id: string) {
+  const userId = await ownerId();
+  const folder = await prisma.quizFolder.findFirst({
+    where: { id, userId },
+    select: { parentId: true },
+  });
+  if (!folder) return;
+  await prisma.$transaction([
+    prisma.quiz.updateMany({
+      where: { userId, folderId: id },
+      data: { folderId: folder.parentId },
+    }),
+    prisma.quizFolder.updateMany({
+      where: { userId, parentId: id },
+      data: { parentId: folder.parentId },
+    }),
+    prisma.quizFolder.deleteMany({ where: { id, userId } }),
+  ]);
+  revalidatePath(QUIZZES_PATH);
+}
+
+export async function moveQuizToFolder(id: string, folderId: string | null) {
+  const userId = await ownerId();
+  if (folderId) {
+    const folder = await prisma.quizFolder.findFirst({
+      where: { id: folderId, userId },
+      select: { id: true },
+    });
+    if (!folder) return;
+  }
+  await prisma.quiz.updateMany({
+    where: { id, userId },
+    data: { folderId },
+  });
+  revalidatePath(QUIZZES_PATH);
+}
+
+export async function createQuiz(topicId: string, title: string, folderId: string | null = null) {
   const trimmed = title.trim();
   if (!trimmed) {
     return { ok: false as const, error: "Name the quiz first." };
@@ -242,8 +344,18 @@ export async function createQuiz(topicId: string, title: string) {
     return { ok: false as const, error: "That topic is no longer here." };
   }
 
+  if (folderId) {
+    const folder = await prisma.quizFolder.findFirst({
+      where: { id: folderId, userId },
+      select: { id: true },
+    });
+    if (!folder) {
+      return { ok: false as const, error: "That group is no longer here." };
+    }
+  }
+
   const quiz = await prisma.quiz.create({
-    data: { title: trimmed, topicId, userId },
+    data: { title: trimmed, topicId, userId, folderId },
   });
   revalidatePath(`${PATH}/${topicId}`);
   revalidatePath(QUIZZES_PATH);

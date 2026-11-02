@@ -5,11 +5,17 @@ import {
   addQuizQuestion,
   addQuizQuestions,
   createQuiz,
+  createQuizFolder,
   deleteQuiz,
+  deleteQuizFolder,
   deleteQuizQuestion,
   deleteQuizQuestions,
   deleteQuizzes,
+  moveQuizToFolder,
+  renameQuiz,
+  renameQuizFolder,
   type QuizData,
+  type QuizFolderData,
   type QuizListItem,
 } from "@/app/flash-cards/actions";
 import { parseBulkQuiz, type BulkParse } from "@/components/flash/aiken";
@@ -27,11 +33,20 @@ const MAX_OPTIONS = 6;
 export function QuizBoard({
   topics,
   quizzes,
+  folders,
 }: {
   topics: { id: string; name: string }[];
   quizzes: QuizListItem[];
+  folders: QuizFolderData[];
 }) {
   const [topicId, setTopicId] = useState(topics[0]?.id ?? "");
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [groupName, setGroupName] = useState("");
+  const [groupError, setGroupError] = useState("");
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+  const [folderDraft, setFolderDraft] = useState("");
+  const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
+  const [quizDraft, setQuizDraft] = useState("");
   const [title, setTitle] = useState("");
   const [createError, setCreateError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -41,9 +56,23 @@ export function QuizBoard({
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const selectedQuizzes = quizzes.filter((quiz) => selectedQuizIds.includes(quiz.id));
-  const allQuizzesSelected =
-    quizzes.length > 0 && selectedQuizzes.length === quizzes.length;
+  const here = quizzes.filter((quiz) => (quiz.folderId ?? null) === folderId);
+  const childFolders = folders.filter((folder) => (folder.parentId ?? null) === folderId);
+  const selectedQuizzes = here.filter((quiz) => selectedQuizIds.includes(quiz.id));
+  const allQuizzesSelected = here.length > 0 && selectedQuizzes.length === here.length;
+
+  const crumbs: { id: string | null; name: string }[] = [{ id: null, name: "All quizzes" }];
+  const chain: QuizFolderData[] = [];
+  let cursor = folderId;
+  const seen = new Set<string>();
+  while (cursor && !seen.has(cursor)) {
+    seen.add(cursor);
+    const folder = folders.find((item) => item.id === cursor);
+    if (!folder) break;
+    chain.unshift(folder);
+    cursor = folder.parentId;
+  }
+  crumbs.push(...chain.map((folder) => ({ id: folder.id, name: folder.name })));
 
   const editing = quizzes.find((quiz) => quiz.id === editingId) ?? null;
   const taking = quizzes.find((quiz) => quiz.id === takingId) ?? null;
@@ -61,13 +90,32 @@ export function QuizBoard({
     }
     setCreateError("");
     startTransition(async () => {
-      const result = await createQuiz(topicId, trimmed);
+      const result = await createQuiz(topicId, trimmed, folderId);
       if (!result.ok) {
         setCreateError(result.error);
         return;
       }
       setTitle("");
       setEditingId(result.id);
+    });
+  }
+
+  function handleCreateGroup(event: React.FormEvent) {
+    event.preventDefault();
+    const trimmed = groupName.trim();
+    if (!trimmed) {
+      setGroupError("Name the group first.");
+      return;
+    }
+    setGroupError("");
+    startTransition(async () => {
+      const result = await createQuizFolder(trimmed, folderId);
+      if (!result.ok) {
+        setGroupError(result.error);
+        return;
+      }
+      setGroupName("");
+      setFolderId(result.id);
     });
   }
 
@@ -151,7 +199,44 @@ export function QuizBoard({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
+      <nav className="flex flex-wrap items-center gap-1 text-sm" aria-label="Quiz groups">
+        {crumbs.map((crumb, index) => (
+          <span key={crumb.id ?? "root"} className="inline-flex items-center gap-1">
+            {index > 0 ? <span className="text-ink-faint">/</span> : null}
+            <button
+              type="button"
+              onClick={() => setFolderId(crumb.id)}
+              className={
+                crumb.id === folderId
+                  ? "font-semibold text-ink"
+                  : "text-ink-soft hover:text-ink"
+              }
+            >
+              {crumb.name}
+            </button>
+          </span>
+        ))}
+      </nav>
+      <form onSubmit={handleCreateGroup} className="flex flex-col gap-2 sm:flex-row sm:items-start">
+        <div className="min-w-0 flex-1">
+          <Input
+            value={groupName}
+            onChange={(event) => {
+              setGroupName(event.target.value);
+              if (groupError) setGroupError("");
+            }}
+            placeholder={folderId ? "Name a subgroup" : "Name a group, for example Programming"}
+            aria-label="New group name"
+            invalid={Boolean(groupError)}
+          />
+          {groupError ? <p className="mt-1.5 text-meta text-danger">{groupError}</p> : null}
+        </div>
+        <Button type="submit" variant="secondary" loading={isPending}>
+          {!isPending && <IconPlus size={18} />}
+          {folderId ? "Add subgroup" : "Add group"}
+        </Button>
+      </form>
       {topics.length === 0 ? (
         <EmptyState
           title="Create a topic first"
@@ -201,12 +286,77 @@ export function QuizBoard({
         </form>
       )}
 
-      {topics.length > 0 && quizzes.length === 0 ? (
+      {childFolders.length > 0 ? (
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {childFolders.map((folder) => (
+            <li key={folder.id} className="ns-card flex items-center justify-between gap-3 p-4">
+              {editingFolderId === folder.id ? (
+                <input
+                  value={folderDraft}
+                  autoFocus
+                  onChange={(event) => setFolderDraft(event.target.value)}
+                  onBlur={() => {
+                    const text = folderDraft.trim();
+                    setEditingFolderId(null);
+                    if (text && text !== folder.name) void renameQuizFolder(folder.id, text);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") event.currentTarget.blur();
+                    if (event.key === "Escape") setEditingFolderId(null);
+                  }}
+                  className="ns-field min-w-0 flex-1"
+                  aria-label="Group name"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setFolderId(folder.id)}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <span className="block font-display text-lead font-semibold text-ink">
+                    {folder.name}
+                  </span>
+                  <span className="mt-1 block text-meta text-ink-faint">
+                    {folders.filter((item) => item.parentId === folder.id).length} subgroups ·{" "}
+                    {quizzes.filter((quiz) => quiz.folderId === folder.id).length} quizzes
+                  </span>
+                </button>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setFolderDraft(folder.name);
+                  setEditingFolderId(folder.id);
+                }}
+              >
+                Rename
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  startTransition(async () => {
+                    await deleteQuizFolder(folder.id);
+                    if (folderId === folder.id) setFolderId(folder.parentId);
+                  });
+                }}
+              >
+                <IconTrash size={15} />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {topics.length > 0 && here.length === 0 && childFolders.length === 0 ? (
         <EmptyState
-          title="No quizzes yet"
-          body="Create a quiz, then add questions with a correct answer and a few wrong ones."
+          title="Nothing in this group yet"
+          body="Add a subgroup, or create a quiz and put it in this group."
         />
-      ) : quizzes.length > 0 ? (
+      ) : here.length > 0 ? (
         <>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <label className="inline-flex items-center gap-2 text-meta text-ink-soft">
@@ -214,7 +364,7 @@ export function QuizBoard({
               type="checkbox"
               checked={allQuizzesSelected}
               onChange={() =>
-                setSelectedQuizIds(allQuizzesSelected ? [] : quizzes.map((quiz) => quiz.id))
+                setSelectedQuizIds(allQuizzesSelected ? [] : here.map((quiz) => quiz.id))
               }
               aria-label="Select all quizzes"
               className="h-4 w-4 accent-orchid"
@@ -233,8 +383,8 @@ export function QuizBoard({
             {selectedQuizzes.length > 0 ? ` (${selectedQuizzes.length})` : ""}
           </Button>
         </div>
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {quizzes.map((quiz) => (
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {here.map((quiz) => (
             <li key={quiz.id} className="ns-card flex min-h-[148px] flex-col justify-between p-4">
               <div className="flex items-start gap-2">
                 <input
@@ -251,8 +401,54 @@ export function QuizBoard({
                   className="mt-1 h-4 w-4 shrink-0 accent-orchid"
                 />
                 <div className="min-w-0">
-                <h2 className="font-display text-lead font-semibold text-ink">{quiz.title}</h2>
+                {editingQuizId === quiz.id ? (
+                  <input
+                    value={quizDraft}
+                    autoFocus
+                    onChange={(event) => setQuizDraft(event.target.value)}
+                    onBlur={() => {
+                      const text = quizDraft.trim();
+                      setEditingQuizId(null);
+                      if (text && text !== quiz.title) void renameQuiz(quiz.id, text);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") event.currentTarget.blur();
+                      if (event.key === "Escape") setEditingQuizId(null);
+                    }}
+                    aria-label="Quiz name"
+                    className="ns-field w-full font-display text-lead font-semibold"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuizDraft(quiz.title);
+                      setEditingQuizId(quiz.id);
+                    }}
+                    className="block w-full text-left"
+                  >
+                    <h2 className="font-display text-lead font-semibold text-ink">{quiz.title}</h2>
+                  </button>
+                )}
                 <p className="mt-1 text-meta text-ink-soft">{quiz.topicName}</p>
+                <select
+                  value={quiz.folderId ?? ""}
+                  onChange={(event) => {
+                    const next = event.target.value || null;
+                    startTransition(async () => {
+                      await moveQuizToFolder(quiz.id, next);
+                    });
+                  }}
+                  aria-label={`Group for ${quiz.title}`}
+                  className="ns-field mt-2"
+                >
+                  <option value="">No group</option>
+                  {folders.map((folder) => (
+                    <option key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </option>
+                  ))}
+                </select>
                 <p className="mt-1 text-meta text-ink-faint">
                   {quiz.questions.length}{" "}
                   {quiz.questions.length === 1 ? "question" : "questions"}
