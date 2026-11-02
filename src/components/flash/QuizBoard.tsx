@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   addQuizQuestion,
   addQuizQuestions,
@@ -47,6 +47,9 @@ export function QuizBoard({
   const [folderDraft, setFolderDraft] = useState("");
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const [quizDraft, setQuizDraft] = useState("");
+  const [selecting, setSelecting] = useState(false);
+  const holdTimer = useRef<number | null>(null);
+  const heldQuiz = useRef(false);
   const [title, setTitle] = useState("");
   const [createError, setCreateError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -54,9 +57,16 @@ export function QuizBoard({
   const [pendingDelete, setPendingDelete] = useState<QuizListItem | null>(null);
   const [selectedQuizIds, setSelectedQuizIds] = useState<string[]>([]);
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
+  const [sort, setSort] = useState<"name" | "created" | "count">("created");
   const [isPending, startTransition] = useTransition();
 
-  const here = quizzes.filter((quiz) => (quiz.folderId ?? null) === folderId);
+  const here = quizzes
+    .filter((quiz) => (quiz.folderId ?? null) === folderId)
+    .sort((a, b) => {
+      if (sort === "name") return a.title.localeCompare(b.title, "ka");
+      if (sort === "count") return b.questions.length - a.questions.length || a.title.localeCompare(b.title, "ka");
+      return b.createdAt.localeCompare(a.createdAt);
+    });
   const childFolders = folders.filter((folder) => (folder.parentId ?? null) === folderId);
   const selectedQuizzes = here.filter((quiz) => selectedQuizIds.includes(quiz.id));
   const allQuizzesSelected = here.length > 0 && selectedQuizzes.length === here.length;
@@ -358,14 +368,31 @@ export function QuizBoard({
         />
       ) : here.length > 0 ? (
         <>
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex justify-end">
+          <select
+            value={sort}
+            onChange={(event) => setSort(event.target.value as "name" | "created" | "count")}
+            aria-label="Sort quizzes"
+            className="ns-field w-auto"
+          >
+            <option value="name">Alphabetical</option>
+            <option value="created">Date created</option>
+            <option value="count">Number of questions</option>
+          </select>
+        </div>
+        <div className={`flex flex-wrap items-center justify-between gap-2 ${selecting ? "" : "hidden"}`}>
           <label className="inline-flex items-center gap-2 text-meta text-ink-soft">
             <input
               type="checkbox"
               checked={allQuizzesSelected}
-              onChange={() =>
-                setSelectedQuizIds(allQuizzesSelected ? [] : here.map((quiz) => quiz.id))
-              }
+              onChange={() => {
+                if (allQuizzesSelected) {
+                  setSelectedQuizIds([]);
+                  setSelecting(false);
+                  return;
+                }
+                setSelectedQuizIds(here.map((quiz) => quiz.id));
+              }}
               aria-label="Select all quizzes"
               className="h-4 w-4 accent-orchid"
             />
@@ -385,21 +412,50 @@ export function QuizBoard({
         </div>
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {here.map((quiz) => (
-            <li key={quiz.id} className="ns-card flex min-h-[148px] flex-col justify-between p-4">
+            <li
+              key={quiz.id}
+              className="ns-card flex min-h-[148px] flex-col justify-between p-4"
+              onPointerDown={(event) => {
+                const target = event.target as HTMLElement;
+                if (target.closest("input, select, a")) return;
+                if (target.closest("button") && !target.closest("[data-quiz-title]")) return;
+                heldQuiz.current = false;
+                holdTimer.current = window.setTimeout(() => {
+                  heldQuiz.current = true;
+                  setSelecting(true);
+                  setSelectedQuizIds((current) =>
+                    current.includes(quiz.id) ? current : [...current, quiz.id],
+                  );
+                }, 2000);
+              }}
+              onPointerUp={() => {
+                if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);
+              }}
+              onPointerLeave={() => {
+                if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);
+              }}
+              onPointerCancel={() => {
+                if (holdTimer.current !== null) window.clearTimeout(holdTimer.current);
+              }}
+            >
               <div className="flex items-start gap-2">
+                {selecting ? (
                 <input
                   type="checkbox"
                   checked={selectedQuizIds.includes(quiz.id)}
                   onChange={() =>
-                    setSelectedQuizIds((current) =>
-                      current.includes(quiz.id)
+                    setSelectedQuizIds((current) => {
+                      const next = current.includes(quiz.id)
                         ? current.filter((id) => id !== quiz.id)
-                        : [...current, quiz.id],
-                    )
+                        : [...current, quiz.id];
+                      if (next.length === 0) setSelecting(false);
+                      return next;
+                    })
                   }
                   aria-label={`Select ${quiz.title}`}
                   className="mt-1 h-4 w-4 shrink-0 accent-orchid"
                 />
+                ) : null}
                 <div className="min-w-0">
                 {editingQuizId === quiz.id ? (
                   <input
@@ -421,7 +477,12 @@ export function QuizBoard({
                 ) : (
                   <button
                     type="button"
+                    data-quiz-title=""
                     onClick={() => {
+                      if (heldQuiz.current) {
+                        heldQuiz.current = false;
+                        return;
+                      }
                       setQuizDraft(quiz.title);
                       setEditingQuizId(quiz.id);
                     }}

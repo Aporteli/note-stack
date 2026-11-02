@@ -210,6 +210,7 @@ export type QuizListItem = QuizData & {
   topicId: string;
   topicName: string;
   folderId: string | null;
+  createdAt: string;
 };
 
 export async function getAllQuizzes(): Promise<QuizListItem[]> {
@@ -222,6 +223,7 @@ export async function getAllQuizzes(): Promise<QuizListItem[]> {
       ...quizSelect,
       topicId: true,
       folderId: true,
+      createdAt: true,
       topic: { select: { name: true } },
     },
   });
@@ -232,6 +234,7 @@ export async function getAllQuizzes(): Promise<QuizListItem[]> {
     topicId: quiz.topicId,
     topicName: quiz.topic.name,
     folderId: quiz.folderId,
+    createdAt: quiz.createdAt.toISOString(),
     questions: quiz.questions,
   }));
 }
