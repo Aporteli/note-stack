@@ -8,6 +8,7 @@ const NAV = [
   { href: "/flash-cards", label: "Flash cards", short: "Cards" },
   { href: "/quizzes", label: "Quiz" },
   { href: "/week", label: "Week" },
+  { href: "/outline", label: "Outline" },
 ];
 
 export default function HeaderNav() {
@@ -18,7 +19,7 @@ export default function HeaderNav() {
       {NAV.map((item) => {
         const active =
           item.href === "/"
-            ? pathname === "/"
+            ? pathname === "/" || pathname.startsWith("/board")
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link

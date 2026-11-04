@@ -3,16 +3,14 @@ import { auth } from "@/auth";
 import { signOutUser, signUpWithGoogle } from "@/app/auth-actions";
 import HeaderNav from "@/components/HeaderNav";
 
-export default async function Header({ wide = false }: { wide?: boolean }) {
+export default async function Header() {
   const session = await auth();
   const account = session?.user?.name || session?.user?.email;
 
   return (
     <header className="shrink-0 border-b border-ink/10 bg-paper/95">
       <div
-        className={`mx-auto flex h-14 items-center justify-between gap-2 px-3 sm:h-16 sm:gap-4 sm:px-6 ${
-          wide ? "max-w-none" : "max-w-6xl"
-        }`}
+        className="mx-auto flex h-14 w-full items-center justify-between gap-2 px-3 sm:h-16 sm:gap-4 sm:px-6"
       >
         <div className="flex min-w-0 items-center gap-2 sm:gap-6">
           <Link href="/" className="flex items-center gap-2.5">

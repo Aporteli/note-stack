@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Header from "@/components/Header";
 import { QuizBoard } from "@/components/flash/QuizBoard";
 import { getAllQuizzes, getFlashTopics, getQuizFolders } from "@/app/flash-cards/actions";
 
@@ -18,8 +17,7 @@ export default async function QuizzesPage() {
   ]);
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden bg-paper text-ink">
-      <Header wide />
+    <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-paper text-ink">
       <div className="min-h-0 w-full flex-1 overflow-y-auto px-6 py-10 sm:px-10 sm:py-14">
         <header className="mb-10 max-w-xl">
           <h1 className="font-display text-4xl font-semibold tracking-tight text-ink sm:text-5xl">

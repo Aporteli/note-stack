@@ -27,6 +27,18 @@ export async function createBoard(title: string) {
   return board;
 }
 
+export async function renameBoard(id: string, title: string) {
+  const text = title.trim().slice(0, 80);
+  if (!id || !text) return;
+  const userId = await ownerId();
+  await prisma.board.updateMany({
+    where: { id, userId },
+    data: { title: text },
+  });
+  revalidatePath("/");
+  revalidatePath(`/board/${id}`);
+}
+
 export async function deleteBoard(id: string) {
   // deleteMany is idempotent — no throw if the row is already gone.
   await prisma.board.deleteMany({ where: { id } });

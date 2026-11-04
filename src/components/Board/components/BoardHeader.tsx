@@ -1,7 +1,8 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import Link from "next/link";
+import { useState } from "react";
+import { renameBoard } from "@/app/actions";
 import {
   IconDescription,
   IconPencil,
@@ -52,77 +53,57 @@ export function BoardHeader({
     data: { type: "new-document" },
   });
 
+  const [name, setName] = useState(title);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(title);
+
+  function commitName() {
+    const text = draft.trim();
+    setEditing(false);
+    if (!text || text === name) return;
+    setName(text);
+    void renameBoard(boardId, text);
+  }
+
   return (
-    <header
-      className="
-        relative z-20 flex h-14 shrink-0 items-center
-        border-b border-slate-200/80
-        bg-white/90 px-4
-        backdrop-blur-xl
-        sm:px-5
-      "
-    >
+    <div className="relative z-20 flex h-12 shrink-0 items-center gap-2 border-b border-ink/10 bg-paper px-3 sm:px-6">
       <div className="flex min-w-0 items-center gap-2">
-        <Link
-          href="/"
-          aria-label="Back to boards"
-          className="
-            group flex h-9 items-center gap-1.5
-            rounded-lg px-2.5
-            text-sm font-medium text-slate-500
-            transition-colors
-            hover:bg-slate-100 hover:text-slate-900
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/60
-          "
-        >
-          <span
-            aria-hidden
-            className="text-base leading-none transition-transform duration-200 group-hover:-translate-x-0.5"
+        {editing ? (
+          <input
+            value={draft}
+            autoFocus
+            onChange={(event) => setDraft(event.target.value)}
+            onBlur={commitName}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") event.currentTarget.blur();
+              if (event.key === "Escape") setEditing(false);
+            }}
+            aria-label="Board name"
+            className="
+              max-w-[45vw] rounded-md bg-slate-100 px-1.5 py-1
+              text-[15px] font-semibold tracking-[-0.01em] text-slate-900
+              outline-none ring-2 ring-slate-300
+              sm:max-w-[55vw]
+            "
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(name);
+              setEditing(true);
+            }}
+            title="Rename board"
+            className="
+              max-w-[45vw] truncate rounded-md px-1 py-1 text-left
+              text-[15px] font-semibold tracking-[-0.01em] text-slate-900
+              hover:bg-slate-100
+              sm:max-w-[55vw]
+            "
           >
-            ←
-          </span>
-          <span className="hidden sm:inline">Boards</span>
-        </Link>
-
-        <Link
-          href="/flash-cards"
-          className="
-            flex h-9 items-center rounded-lg px-2.5
-            text-sm font-medium text-slate-500
-            transition-colors
-            hover:bg-slate-100 hover:text-slate-900
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/60
-          "
-        >
-          <span className="sm:hidden">Cards</span>
-          <span className="hidden sm:inline">Flash cards</span>
-        </Link>
-
-        <Link
-          href="/quizzes"
-          className="
-            flex h-9 items-center rounded-lg px-2.5
-            text-sm font-medium text-slate-500
-            transition-colors
-            hover:bg-slate-100 hover:text-slate-900
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/60
-          "
-        >
-          Quiz
-        </Link>
-
-        <span aria-hidden className="h-5 w-px bg-slate-200" />
-
-        <h1
-          className="
-            max-w-[45vw] truncate px-1
-            text-[15px] font-semibold tracking-[-0.01em] text-slate-900
-            sm:max-w-[55vw]
-          "
-          title={title}
-        >
-          {title}
-        </h1>
+            {name}
+          </button>
+        )}
       </div>
 
       <div className="ml-auto flex items-center gap-2">
@@ -210,6 +191,6 @@ export function BoardHeader({
           <span>Add list</span>
         </button>
       </div>
-    </header>
+    </div>
   );
 }

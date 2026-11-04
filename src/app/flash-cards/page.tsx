@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Header from "@/components/Header";
 import { CreateTopicForm } from "@/components/flash/CreateTopicForm";
 import { EmptyState } from "@/components/ui/Feedback";
 import { IconStack } from "@/components/ui/Icons";
@@ -17,9 +16,8 @@ export default async function FlashCardsPage() {
   const topics = await getFlashTopics();
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden bg-paper text-ink">
-      <Header wide />
-      <div className="mx-auto min-h-0 w-full max-w-6xl flex-1 overflow-y-auto px-5 py-10 sm:px-6 sm:py-14">
+    <main className="min-h-0 flex-1 overflow-y-auto bg-paper text-ink">
+      <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-6 sm:py-14">
         <header className="mb-10">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-xl">

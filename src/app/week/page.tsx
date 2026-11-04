@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Header from "@/components/Header";
 import { WeekBoard } from "@/components/week/WeekSchedule";
 import { getWeekBoard } from "./actions";
 
@@ -14,8 +13,7 @@ export default async function WeekPage() {
   const { plans, slots } = await getWeekBoard();
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden bg-paper text-ink">
-      <Header wide />
+    <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-paper text-ink">
       <div className="flex min-h-0 w-full flex-1 flex-col px-3 pb-3 sm:px-4">
         <header className="mb-2 shrink-0">
         

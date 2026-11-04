@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Public_Sans } from "next/font/google";
+import Header from "@/components/Header";
 import "./globals.css";
 
 /* Display: Bricolage Grotesque — slightly irregular, so headings feel written
@@ -31,7 +32,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="flex h-dvh flex-col overflow-hidden bg-paper font-sans text-ink antialiased">
+        <Header />
+        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+      </body>
     </html>
   );
 }

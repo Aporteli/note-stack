@@ -4,8 +4,6 @@ import { getBoards } from "./actions";
 import CreateBoardForm from "@/components/CreateBoardForm";
 import { BoardTile } from "@/components/BoardTile";
 import { EmptyState } from "@/components/ui/Feedback";
-import { IconStack } from "@/components/ui/Icons";
-import Header from "@/components/Header";
 
 export const dynamic = "force-dynamic";
 
@@ -13,9 +11,7 @@ export default async function HomePage() {
   const boards = await getBoards();
 
   return (
-    <main className="min-h-screen bg-paper text-ink">
-      <Header />
-
+    <main className="min-h-0 flex-1 overflow-y-auto bg-paper text-ink">
       {/* Main workspace */}
       <div className="mx-auto max-w-6xl px-5 py-10 sm:px-6 sm:py-14">
         <header className="mb-10">

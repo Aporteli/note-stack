@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Header from "@/components/Header";
 import { FlashDeck } from "@/components/flash/FlashDeck";
 import { getFlashCards, getFlashTopic } from "../actions";
 
@@ -23,8 +22,7 @@ export default async function FlashTopicPage({
   const cards = await getFlashCards(topic.id);
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden bg-paper text-ink">
-      <Header wide />
+    <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-paper text-ink">
       <FlashDeck topicId={topic.id} topicName={topic.name} cards={cards} />
     </main>
   );
