@@ -14,6 +14,7 @@ const isTempId = (id: string) => id.startsWith("temp-");
 
 export async function getBoards() {
   const userId = await ownerId();
+  if (!userId) return [];
   return prisma.board.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
@@ -22,6 +23,7 @@ export async function getBoards() {
 
 export async function createBoard(title: string) {
   const userId = await ownerId();
+  if (!userId) return null;
   const board = await prisma.board.create({ data: { title, userId } });
   revalidatePath("/");
   return board;
@@ -31,6 +33,7 @@ export async function renameBoard(id: string, title: string) {
   const text = title.trim().slice(0, 80);
   if (!id || !text) return;
   const userId = await ownerId();
+  if (!userId) return;
   await prisma.board.updateMany({
     where: { id, userId },
     data: { title: text },
@@ -40,16 +43,19 @@ export async function renameBoard(id: string, title: string) {
 }
 
 export async function deleteBoard(id: string) {
-  // deleteMany is idempotent — no throw if the row is already gone.
-  await prisma.board.deleteMany({ where: { id } });
+  const userId = await ownerId();
+  if (!userId) return;
+  await prisma.board.deleteMany({ where: { id, userId } });
   revalidatePath("/");
 }
 
 /* -------------------- BOARD DETAIL -------------------- */
 
 export async function getBoard(boardId: string) {
-  return prisma.board.findUnique({
-    where: { id: boardId },
+  const userId = await ownerId();
+  if (!userId) return null;
+  return prisma.board.findFirst({
+    where: { id: boardId, userId },
     include: {
       lists: {
         where: { trashedAt: null },

@@ -75,6 +75,7 @@ async function ensurePlans(userId: string): Promise<WeekPlanData[]> {
 
 export async function getWeekBoard(): Promise<{ plans: WeekPlanData[]; slots: WeekSlotData[] }> {
   const userId = await ownerId();
+  if (!userId) return { plans: [], slots: [] };
   const plans = await ensurePlans(userId);
   const slots = await prisma.weekSlot.findMany({
     where: { userId },
@@ -88,6 +89,7 @@ export async function renameWeekPlan(id: string, name: string): Promise<WeekPlan
   const text = name.trim().slice(0, 40);
   if (!id || !text) return null;
   const userId = await ownerId();
+  if (!userId) return null;
   const updated = await prisma.weekPlan.updateMany({
     where: { id, userId },
     data: { name: text },
@@ -96,8 +98,9 @@ export async function renameWeekPlan(id: string, name: string): Promise<WeekPlan
   return { id, name: text };
 }
 
-export async function createWeekPlan(): Promise<WeekPlanData> {
+export async function createWeekPlan(): Promise<WeekPlanData | null> {
   const userId = await ownerId();
+  if (!userId) return null;
   const count = await prisma.weekPlan.count({ where: { userId } });
   return prisma.weekPlan.create({
     data: { userId, name: `Schedule ${count + 1}`, order: count },
@@ -117,6 +120,7 @@ export async function createSlot(
   const text = task.trim();
   if (!text) return null;
   const userId = await ownerId();
+  if (!userId) return null;
   const plan = await prisma.weekPlan.findFirst({
     where: { id: planId, userId },
     select: { id: true },
@@ -138,6 +142,7 @@ export async function updateSlot(
 ) {
   if (!id || !validDay(day) || !validRange(startMin, endMin)) return;
   const userId = await ownerId();
+  if (!userId) return;
   const text = task.trim();
   if (!text) {
     await prisma.weekSlot.deleteMany({ where: { id, userId } });
@@ -156,6 +161,7 @@ export async function replaceDay(
 ): Promise<WeekSlotData[]> {
   if (!validDay(day) || !planId) return [];
   const userId = await ownerId();
+  if (!userId) return [];
   const plan = await prisma.weekPlan.findFirst({
     where: { id: planId, userId },
     select: { id: true },

@@ -34,6 +34,7 @@ export function WeekBoard({
   function addPlan() {
     startAdding(async () => {
       const created = await createWeekPlan();
+      if (!created) return;
       setList((items) => [...items, created]);
       setActive(created.id);
     });

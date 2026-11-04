@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { ownerId } from "@/lib/owner";
 
+const SIGNED_OUT = "Sign in to continue.";
 const PATH = "/flash-cards";
 const QUIZZES_PATH = "/quizzes";
 
@@ -21,6 +22,7 @@ function sides(front: string, back: string) {
 
 export async function getFlashTopics() {
   const user = { id: await ownerId() };
+  if (!user.id) return [];
 
   return prisma.flashTopic.findMany({
     where: { userId: user.id },
@@ -41,6 +43,7 @@ export async function createFlashTopic(name: string) {
   }
 
   const userId = await ownerId();
+  if (!userId) return { ok: false as const, error: SIGNED_OUT };
   const topic = await prisma.flashTopic.create({
     data: { name: trimmed, userId },
   });
@@ -50,12 +53,14 @@ export async function createFlashTopic(name: string) {
 
 export async function deleteFlashTopic(id: string) {
   const userId = await ownerId();
+  if (!userId) return;
   await prisma.flashTopic.deleteMany({ where: { id, userId } });
   revalidatePath(PATH);
 }
 
 export async function getFlashTopic(id: string) {
   const user = { id: await ownerId() };
+  if (!user.id) return null;
 
   return prisma.flashTopic.findFirst({
     where: { id, userId: user.id },
@@ -65,6 +70,7 @@ export async function getFlashTopic(id: string) {
 
 export async function getFlashCards(topicId: string) {
   const user = { id: await ownerId() };
+  if (!user.id) return [];
 
   return prisma.flashCard.findMany({
     where: { userId: user.id, topicId },
@@ -79,6 +85,7 @@ export async function getRandomFlashCard(
   allowRepeat = true,
 ) {
   const user = { id: await ownerId() };
+  if (!user.id) return null;
 
   const unique = [...new Set(excludeIds.filter(Boolean))];
   const base = { userId: user.id, topicId };
@@ -115,6 +122,7 @@ export async function createFlashCard(
   if (!cleaned.ok) return cleaned;
 
   const userId = await ownerId();
+  if (!userId) return { ok: false as const, error: SIGNED_OUT };
   const topic = await prisma.flashTopic.findFirst({
     where: { id: topicId, userId },
     select: { id: true },
@@ -141,6 +149,7 @@ export async function updateFlashCard(id: string, front: string, back: string) {
   if (!cleaned.ok) return cleaned;
 
   const userId = await ownerId();
+  if (!userId) return { ok: false as const, error: SIGNED_OUT };
   const card = await prisma.flashCard.findFirst({
     where: { id, userId },
     select: { topicId: true },
@@ -192,6 +201,7 @@ const quizSelect = {
 
 export async function getQuizzes(topicId: string): Promise<QuizData[]> {
   const user = { id: await ownerId() };
+  if (!user.id) return [];
 
   return prisma.quiz.findMany({
     where: { userId: user.id, topicId },
@@ -215,6 +225,7 @@ export type QuizListItem = QuizData & {
 
 export async function getAllQuizzes(): Promise<QuizListItem[]> {
   const user = { id: await ownerId() };
+  if (!user.id) return [];
 
   const quizzes = await prisma.quiz.findMany({
     where: { userId: user.id },
@@ -241,6 +252,7 @@ export async function getAllQuizzes(): Promise<QuizListItem[]> {
 
 export async function getQuizFolders(): Promise<QuizFolderData[]> {
   const userId = await ownerId();
+  if (!userId) return [];
   return prisma.quizFolder.findMany({
     where: { userId },
     orderBy: { name: "asc" },
@@ -252,6 +264,7 @@ export async function createQuizFolder(name: string, parentId: string | null) {
   const trimmed = name.trim().slice(0, 80);
   if (!trimmed) return { ok: false as const, error: "Name the group first." };
   const userId = await ownerId();
+  if (!userId) return { ok: false as const, error: SIGNED_OUT };
   if (parentId) {
     const parent = await prisma.quizFolder.findFirst({
       where: { id: parentId, userId },
@@ -271,6 +284,7 @@ export async function renameQuiz(id: string, title: string) {
   const trimmed = title.trim().slice(0, 120);
   if (!id || !trimmed) return;
   const userId = await ownerId();
+  if (!userId) return;
   const quiz = await prisma.quiz.findFirst({
     where: { id, userId },
     select: { topicId: true },
@@ -288,6 +302,7 @@ export async function renameQuizFolder(id: string, name: string) {
   const trimmed = name.trim().slice(0, 80);
   if (!id || !trimmed) return;
   const userId = await ownerId();
+  if (!userId) return;
   await prisma.quizFolder.updateMany({
     where: { id, userId },
     data: { name: trimmed },
@@ -297,6 +312,7 @@ export async function renameQuizFolder(id: string, name: string) {
 
 export async function deleteQuizFolder(id: string) {
   const userId = await ownerId();
+  if (!userId) return;
   const folder = await prisma.quizFolder.findFirst({
     where: { id, userId },
     select: { parentId: true },
@@ -318,6 +334,7 @@ export async function deleteQuizFolder(id: string) {
 
 export async function moveQuizToFolder(id: string, folderId: string | null) {
   const userId = await ownerId();
+  if (!userId) return;
   if (folderId) {
     const folder = await prisma.quizFolder.findFirst({
       where: { id: folderId, userId },
@@ -339,6 +356,7 @@ export async function createQuiz(topicId: string, title: string, folderId: strin
   }
 
   const userId = await ownerId();
+  if (!userId) return { ok: false as const, error: SIGNED_OUT };
   const topic = await prisma.flashTopic.findFirst({
     where: { id: topicId, userId },
     select: { id: true },
@@ -367,6 +385,7 @@ export async function createQuiz(topicId: string, title: string, folderId: strin
 
 export async function deleteQuiz(id: string) {
   const userId = await ownerId();
+  if (!userId) return;
   const quiz = await prisma.quiz.findFirst({
     where: { id, userId },
     select: { topicId: true },
@@ -381,6 +400,7 @@ export async function deleteQuizzes(ids: string[]) {
   if (unique.length === 0) return;
 
   const userId = await ownerId();
+  if (!userId) return;
   const quizzes = await prisma.quiz.findMany({
     where: { id: { in: unique }, userId },
     select: { topicId: true },
@@ -435,6 +455,7 @@ export async function addQuizQuestion(
   if (!cleaned.ok) return cleaned;
 
   const userId = await ownerId();
+  if (!userId) return { ok: false as const, error: SIGNED_OUT };
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId, userId },
     select: { topicId: true, _count: { select: { questions: true } } },
@@ -467,6 +488,7 @@ export async function addQuizQuestions(
   questions: { prompt: string; options: { text: string; correct: boolean }[] }[],
 ) {
   const userId = await ownerId();
+  if (!userId) return { ok: false as const, error: SIGNED_OUT };
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId, userId },
     select: { topicId: true, _count: { select: { questions: true } } },
@@ -530,6 +552,7 @@ export async function addQuizQuestions(
 
 export async function deleteQuizQuestion(id: string) {
   const userId = await ownerId();
+  if (!userId) return;
   const question = await prisma.quizQuestion.findFirst({
     where: { id, quiz: { userId } },
     select: { quiz: { select: { topicId: true } } },
@@ -546,6 +569,7 @@ export async function deleteQuizQuestions(ids: string[]) {
   if (unique.length === 0) return;
 
   const userId = await ownerId();
+  if (!userId) return;
   const questions = await prisma.quizQuestion.findMany({
     where: { id: { in: unique }, quiz: { userId } },
     select: { quiz: { select: { topicId: true } } },
@@ -561,6 +585,7 @@ export async function deleteQuizQuestions(ids: string[]) {
 
 export async function deleteFlashCard(id: string) {
   const userId = await ownerId();
+  if (!userId) return;
   const card = await prisma.flashCard.findFirst({
     where: { id, userId },
     select: { topicId: true },
