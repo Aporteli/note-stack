@@ -28,9 +28,7 @@ import type {
 } from "@/components/Board/types/board";
 
 const LIST_W = 296;
-const DOC_W = 280;
 const LIST_DROP_OFFSET_Y = 20;
-const DOC_DROP_OFFSET_Y = 24;
 
 type Options = {
   lists: ListData[];
@@ -64,20 +62,51 @@ export function useBoardDnd({
   const [activeType, setActiveType] = useState<DragType | null>(null);
 
   const initialPointerRef = useRef<{ x: number; y: number } | null>(null);
+  const pointerRef = useRef<{ x: number; y: number } | null>(null);
+  const grabRef = useRef<{ x: number; y: number } | null>(null);
+  const stopPointerTrackingRef = useRef<(() => void) | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
   function handleDragStart(event: DragStartEvent) {
+    stopPointerTrackingRef.current?.();
     const act = event.activatorEvent;
     if (
       typeof window !== "undefined" &&
       (act instanceof PointerEvent || act instanceof MouseEvent)
     ) {
-      initialPointerRef.current = { x: act.clientX, y: act.clientY };
+      const point = { x: act.clientX, y: act.clientY };
+      initialPointerRef.current = point;
+      pointerRef.current = point;
+      const source = act.target instanceof Element ? act.target.closest("button") : null;
+      const sourceRect = source?.getBoundingClientRect();
+      grabRef.current = sourceRect
+        ? { x: act.clientX - sourceRect.left, y: act.clientY - sourceRect.top }
+        : { x: 0, y: 0 };
+
+      const track = (ev: PointerEvent) => {
+        pointerRef.current = { x: ev.clientX, y: ev.clientY };
+      };
+      const stop = () => {
+        window.removeEventListener("pointermove", track);
+        window.removeEventListener("pointerup", end);
+        window.removeEventListener("pointercancel", end);
+        stopPointerTrackingRef.current = null;
+      };
+      const end = (ev: PointerEvent) => {
+        track(ev);
+        stop();
+      };
+      window.addEventListener("pointermove", track);
+      window.addEventListener("pointerup", end);
+      window.addEventListener("pointercancel", end);
+      stopPointerTrackingRef.current = stop;
     } else {
       initialPointerRef.current = null;
+      pointerRef.current = null;
+      grabRef.current = null;
     }
 
     setActiveId(event.active.id as string);
@@ -142,16 +171,17 @@ export function useBoardDnd({
 
     /* ---------- NEW-DOCUMENT ---------- */
     if (kind === "new-document") {
-      const init = initialPointerRef.current;
+      const pointer = pointerRef.current;
+      const grab = grabRef.current;
       const canvasEl = canvasRef?.current;
       initialPointerRef.current = null;
-      if (!init || !canvasEl) return;
+      pointerRef.current = null;
+      grabRef.current = null;
+      if (!pointer || !grab || !canvasEl) return;
 
-      const endClientX = init.x + delta.x;
-      const endClientY = init.y + delta.y;
       const rect = canvasEl.getBoundingClientRect();
-      const x = Math.max(0, endClientX - rect.left - DOC_W / 2);
-      const y = Math.max(0, endClientY - rect.top - DOC_DROP_OFFSET_Y);
+      const x = Math.max(0, pointer.x - grab.x - rect.left);
+      const y = Math.max(0, pointer.y - grab.y - rect.top);
 
       const placeholderId = tempId();
       const placeholder: DocumentData = {
