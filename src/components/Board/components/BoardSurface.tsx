@@ -17,6 +17,7 @@ type Props = {
   selectedItemKeys: Set<string>;
   selectedDrawingIds: Set<string>;
   draggingDrawings: boolean;
+  documentDrag: { dx: number; dy: number; ids: ReadonlySet<string> } | null;
   onContextMenu: (event: MouseEvent) => void;
   onClick: (event: MouseEvent) => void;
   onOpenCard: (id: string) => void;
@@ -35,6 +36,7 @@ export function BoardSurface({
   selectedItemKeys,
   selectedDrawingIds,
   draggingDrawings,
+  documentDrag,
   onContextMenu,
   onClick,
   onOpenCard,
@@ -62,6 +64,11 @@ export function BoardSurface({
           key={doc.id}
           document={doc}
           selected={selectedItemKeys.has(`document:${doc.id}`)}
+          dragOffset={
+            documentDrag?.ids.has(doc.id)
+              ? { dx: documentDrag.dx, dy: documentDrag.dy }
+              : null
+          }
           onOpen={onOpenDocument}
           onStartDrag={onStartDocumentDrag}
         />

@@ -59,7 +59,7 @@ export default function Board({ board }: Props) {
     },
   });
   const { setOpenCardId, openCard, openCardListTitle } = useCardModal(lists);
-  const startDocumentDrag = useDocumentDrag({
+  const documentDrag = useDocumentDrag({
     boardId: board.id,
     documents,
     setDocuments,
@@ -83,16 +83,26 @@ export default function Board({ board }: Props) {
     setAddListOpen(true);
   }, []);
 
-  const bounds = useMemo(
-    () =>
-      canvasBounds(
-        lists,
-        drawings,
-        documents,
-        drawMode ? { minWidth: 4000, minHeight: 3000 } : undefined,
-      ),
-    [lists, drawings, documents, drawMode],
-  );
+  const bounds = useMemo(() => {
+    const drag = documentDrag.drag;
+    const liveDocuments = drag
+      ? documents.map((doc) =>
+          drag.ids.has(doc.id)
+            ? {
+                ...doc,
+                x: Math.max(0, doc.x + drag.dx),
+                y: Math.max(0, doc.y + drag.dy),
+              }
+            : doc,
+        )
+      : documents;
+    return canvasBounds(
+      lists,
+      drawings,
+      liveDocuments,
+      drawMode ? { minWidth: 4000, minHeight: 3000 } : undefined,
+    );
+  }, [lists, drawings, documents, drawMode, documentDrag.drag]);
 
   async function handleSaveDrawing(
     area: { x: number; y: number; w: number; h: number },
@@ -156,11 +166,12 @@ export default function Board({ board }: Props) {
             selectedItemKeys={selection.selectedItemKeys}
             selectedDrawingIds={selection.selectedDrawingIds}
             draggingDrawings={drawingDrag.draggingDrawings}
+            documentDrag={documentDrag.drag}
             onContextMenu={selection.handleContextMenu}
             onClick={selection.handleCanvasClick}
             onOpenCard={setOpenCardId}
             onOpenDocument={editor.setOpenDocumentId}
-            onStartDocumentDrag={startDocumentDrag}
+            onStartDocumentDrag={documentDrag.startDrag}
             onStartDrawingDrag={drawingDrag.startDrag}
             onAddListClose={() => setAddListOpen(false)}
           />

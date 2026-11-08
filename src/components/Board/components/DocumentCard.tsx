@@ -8,6 +8,7 @@ import { IconDescription, IconPencil } from "@/components/ui/Icons";
 type Props = {
   document: DocumentData;
   selected: boolean;
+  dragOffset: { dx: number; dy: number } | null;
   onOpen: (id: string) => void;
   onStartDrag: (
     id: string,
@@ -29,10 +30,14 @@ function preview(text: string): string {
 export function DocumentCard({
   document,
   selected,
+  dragOffset,
   onOpen,
   onStartDrag,
 }: Props) {
   const startRef = useRef<{ x: number; y: number } | null>(null);
+  const dragging = dragOffset !== null;
+  const dx = dragOffset ? Math.max(-document.x, dragOffset.dx) : 0;
+  const dy = dragOffset ? Math.max(-document.y, dragOffset.dy) : 0;
 
   const style: React.CSSProperties = {
     position: "absolute",
@@ -40,10 +45,13 @@ export function DocumentCard({
     top: document.y,
     width: CARD_W,
     height: CARD_H,
-    zIndex: selected ? 44 : 32,
+    zIndex: dragging ? 70 : selected ? 44 : 32,
     touchAction: "none",
     userSelect: "none",
-    cursor: "grab",
+    cursor: dragging ? "grabbing" : "grab",
+    ...(dragging
+      ? { transform: `translate3d(${dx}px, ${dy}px, 0)`, willChange: "transform" }
+      : null),
   };
 
   return (
@@ -53,6 +61,7 @@ export function DocumentCard({
       data-item-id={document.id}
       onPointerDown={(e) => {
         e.stopPropagation();
+        if (!e.shiftKey) e.currentTarget.setPointerCapture(e.pointerId);
         startRef.current = { x: e.clientX, y: e.clientY };
         onStartDrag(document.id, e.clientX, e.clientY, e.shiftKey);
       }}

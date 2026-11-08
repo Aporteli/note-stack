@@ -18,7 +18,7 @@ export function BoardCanvas({
 }: Props) {
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden">
-      <div className="ns-scroll relative h-full w-full overflow-auto">
+      <div className="ns-scroll relative h-full w-full overflow-auto [overflow-anchor:none]">
         <div
           ref={canvasRef}
           className="relative"
