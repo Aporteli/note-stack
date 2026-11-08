@@ -63,7 +63,7 @@ export function DocumentModal({ document: doc, onSave, onClose }: Props) {
   return (
     <>
       {host ? createPortal(tools, host) : null}
-      <div className="absolute inset-0 z-30 flex flex-col bg-white">
+      <div className="absolute inset-0 z-[80] flex flex-col bg-white">
         <DocumentModalHeader
           title={sketch.title}
           tab={sketch.tab}
