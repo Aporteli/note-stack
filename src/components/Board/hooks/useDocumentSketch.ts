@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
+import { plainText } from "@/components/Board/lib/richText";
 import { DOC_CANVAS_H, DOC_CANVAS_W } from "@/components/Board/types/board";
 import type { DocumentData, Stroke, StrokeKind, StrokePoint } from "@/components/Board/types/board";
 import {
@@ -28,9 +29,8 @@ export function useDocumentSketch(doc: DocumentData | null, onClose: () => void)
   const [thickness, setThickness] = useState(WIDTHS[1]);
   const [canUndo, setCanUndo] = useState(false);
   const [pageH, setPageH] = useState(DOC_CANVAS_H);
-  const [toolsOpen, setToolsOpen] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
-  const textRef = useRef<HTMLTextAreaElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
   const draftRef = useRef<Stroke | null>(null);
   const toolRef = useRef<Tool>(tool);
   const strokesRef = useRef(strokes);
@@ -52,7 +52,6 @@ export function useDocumentSketch(doc: DocumentData | null, onClose: () => void)
     setCanUndo(false);
     setTool("type");
     setPageH(DOC_CANVAS_H);
-    setToolsOpen(false);
     setTab("write");
   }, [doc?.id]);
 
@@ -78,7 +77,7 @@ export function useDocumentSketch(doc: DocumentData | null, onClose: () => void)
     for (const stroke of marks) {
       for (const [, y] of stroke.points) ink = Math.max(ink, Math.ceil(y + 48));
     }
-    const fromText = Math.max(DOC_CANVAS_H, text.split("\n").length * 28 + 96);
+    const fromText = Math.max(DOC_CANVAS_H, plainText(text).split("\n").length * 28 + 96);
     const next = Math.max(ink, fromText);
     setPageH((height) => (next > height ? next : height));
   }, [text, strokes, current]);
@@ -87,11 +86,7 @@ export function useDocumentSketch(doc: DocumentData | null, onClose: () => void)
     if (tab !== "write") return;
     const el = textRef.current;
     if (!el) return;
-    const prev = el.style.height;
-    el.style.height = "0px";
-    const needed = el.scrollHeight;
-    el.style.height = prev;
-    setPageH((height) => (needed > height ? needed : height));
+    setPageH((height) => (el.scrollHeight > height ? el.scrollHeight : height));
   }, [text, tab]);
 
   useEffect(() => {
@@ -228,6 +223,7 @@ export function useDocumentSketch(doc: DocumentData | null, onClose: () => void)
   function showWrite() {
     draftRef.current = null;
     setCurrent(null);
+    setTool("type");
     setTab("write");
   }
 
@@ -235,19 +231,7 @@ export function useDocumentSketch(doc: DocumentData | null, onClose: () => void)
     draftRef.current = null;
     setCurrent(null);
     if (tool === "type") setTool("pen");
-    setToolsOpen(true);
     setTab("sketch");
-  }
-
-  function toggleTools() {
-    if (toolsOpen) {
-      draftRef.current = null;
-      setCurrent(null);
-      if (tab === "write") setTool("type");
-      setToolsOpen(false);
-      return;
-    }
-    setToolsOpen(true);
   }
 
   return {
@@ -265,7 +249,6 @@ export function useDocumentSketch(doc: DocumentData | null, onClose: () => void)
     setThickness,
     canUndo,
     pageH,
-    toolsOpen,
     textRef,
     svgRef,
     drawing: tool !== "eraser",
@@ -274,7 +257,6 @@ export function useDocumentSketch(doc: DocumentData | null, onClose: () => void)
     chooseTool,
     showWrite,
     showSketch,
-    toggleTools,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,

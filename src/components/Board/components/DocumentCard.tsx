@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { plainText } from "@/components/Board/lib/richText";
 import type { DocumentData } from "@/components/Board/types/board";
 import { IconDescription, IconPencil } from "@/components/ui/Icons";
 
@@ -20,7 +21,7 @@ const CARD_W = 280;
 const CARD_H = 200;
 
 function preview(text: string): string {
-  const cleaned = text.replace(/\s+/g, " ").trim();
+  const cleaned = plainText(text).replace(/\s+/g, " ").trim();
   if (!cleaned) return "";
   return cleaned.length > 160 ? cleaned.slice(0, 160) + "…" : cleaned;
 }

@@ -40,7 +40,7 @@ export function DrawToolbar({
   onClear,
 }: Props) {
   return (
-    <div className="mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-1.5">
+    <div className="flex max-w-full flex-wrap items-center gap-1.5">
       {showType ? (
         <ToolToggle
           active={tool === "type"}

@@ -14,6 +14,7 @@ import { useDrawings } from "@/components/Board/hooks/useDrawings";
 import { useLists } from "@/components/Board/hooks/useLists";
 import { canvasBounds } from "@/components/Board/lib/dnd";
 import type { BoardData, Stroke } from "@/components/Board/types/board";
+import { BoardToolsProvider } from "@/components/Board/components/document/boardTools";
 import { BoardCanvas } from "@/components/Board/components/BoardCanvas";
 import { BoardDragOverlay } from "@/components/Board/components/BoardDragOverlay";
 import { BoardHeader } from "@/components/Board/components/BoardHeader";
@@ -120,6 +121,7 @@ export default function Board({ board }: Props) {
       : undefined;
 
   return (
+    <BoardToolsProvider>
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f6f5f2] text-slate-900">
       <DndContext
         sensors={sensors}
@@ -135,8 +137,10 @@ export default function Board({ board }: Props) {
           drawMode={drawMode}
           onToggleDraw={() => setDrawMode((value) => !value)}
           refreshKey={selection.refreshKey}
+          documentOpen={editor.openDocument !== null}
         />
 
+        <div className="relative z-0 flex min-h-0 flex-1 flex-col">
         <BoardCanvas
           width={bounds.width}
           height={bounds.height}
@@ -170,6 +174,13 @@ export default function Board({ board }: Props) {
           ) : null}
         </BoardCanvas>
 
+        <DocumentModal
+          document={editor.openDocument}
+          onSave={editor.saveDocument}
+          onClose={() => editor.setOpenDocumentId(null)}
+        />
+        </div>
+
         <BoardDragOverlay
           activeCard={activeCard}
           activeList={activeList}
@@ -201,12 +212,7 @@ export default function Board({ board }: Props) {
           />
         ) : null}
       </DndContext>
-
-      <DocumentModal
-        document={editor.openDocument}
-        onSave={editor.saveDocument}
-        onClose={() => editor.setOpenDocumentId(null)}
-      />
     </div>
+    </BoardToolsProvider>
   );
 }

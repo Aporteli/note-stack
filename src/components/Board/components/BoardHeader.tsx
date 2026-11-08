@@ -12,6 +12,8 @@ import {
   NEW_DOCUMENT_DRAG_ID,
   NEW_LIST_DRAG_ID,
 } from "@/components/Board/types/board";
+import { FormatToolbar } from "@/components/Board/components/document/FormatToolbar";
+import { useBoardTools } from "@/components/Board/components/document/boardTools";
 import { TrashMenu } from "./TrashMenu";
 
 type Props = {
@@ -22,6 +24,7 @@ type Props = {
   onToggleDraw: () => void;
   drawMode: boolean;
   refreshKey: number;
+  documentOpen: boolean;
 };
 
 export function BoardHeader({
@@ -32,7 +35,9 @@ export function BoardHeader({
   onToggleDraw,
   drawMode,
   refreshKey,
+  documentOpen,
 }: Props) {
+  const { setHost } = useBoardTools();
   const {
     setNodeRef: setListRef,
     listeners: listListeners,
@@ -66,7 +71,8 @@ export function BoardHeader({
   }
 
   return (
-    <div className="relative z-20 flex h-12 shrink-0 items-center gap-2 border-b border-ink/10 bg-paper px-3 sm:px-6">
+    <div className="relative z-20 shrink-0 border-b border-ink/10 bg-paper">
+    <div className="flex h-12 items-center gap-2 px-3 sm:px-6">
       <div className="flex min-w-0 items-center gap-2">
         {editing ? (
           <input
@@ -190,6 +196,11 @@ export function BoardHeader({
           />
           <span>Add list</span>
         </button>
+      </div>
+    </div>
+      <div className="ns-scroll flex min-h-11 items-center overflow-x-auto border-t border-ink/10 px-2 py-1 sm:px-4">
+        {documentOpen ? null : <FormatToolbar />}
+        <div ref={setHost} className="flex items-center" />
       </div>
     </div>
   );
