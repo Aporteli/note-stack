@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { QuizData } from "@/app/flash-cards/actions";
 import { ConfirmDialog } from "@/components/Board/components/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
@@ -19,6 +20,7 @@ type Props = {
 
 export function QuizEditor({ quiz, busy, onBack, onTake, onDeleteQuestion }: Props) {
   const editor = useQuizEditor(quiz, busy);
+  const [pendingQuestionId, setPendingQuestionId] = useState<string | null>(null);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
@@ -71,6 +73,8 @@ export function QuizEditor({ quiz, busy, onBack, onTake, onDeleteQuestion }: Pro
         onPaste={editor.changePaste}
         onPreview={editor.handlePreview}
         onSave={editor.handleSavePasted}
+        onChangeQuestion={editor.changePreviewQuestion}
+        onRemoveQuestion={editor.removePreviewQuestion}
       />
 
       <QuizQuestionList
@@ -82,9 +86,25 @@ export function QuizEditor({ quiz, busy, onBack, onTake, onDeleteQuestion }: Pro
         onToggleAll={editor.toggleAllQuestions}
         onToggle={editor.toggleQuestion}
         onDeleteSelected={() => editor.setConfirmDelete(true)}
-        onDelete={onDeleteQuestion}
+        onDelete={setPendingQuestionId}
       />
 
+      <ConfirmDialog
+        open={pendingQuestionId !== null}
+        title="Delete this question?"
+        body="The question and its answers will be removed."
+        confirmLabel="Delete question"
+        tone="danger"
+        busy={busy}
+        onCancel={() => {
+          if (!busy) setPendingQuestionId(null);
+        }}
+        onConfirm={() => {
+          if (!pendingQuestionId) return;
+          onDeleteQuestion(pendingQuestionId);
+          setPendingQuestionId(null);
+        }}
+      />
       <ConfirmDialog
         open={editor.confirmDelete}
         title={

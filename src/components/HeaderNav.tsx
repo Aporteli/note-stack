@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { QUIZ_HOME_EVENT } from "@/components/flash/lib/quizBoard";
 
 const NAV = [
   { href: "/", label: "Boards" },
   { href: "/flash-cards", label: "Flash cards", short: "Cards" },
   { href: "/quizzes", label: "Quiz" },
+  { href: "/diagrams", label: "Diagrams" },
   { href: "/week", label: "Week" },
   { href: "/outline", label: "Outline" },
 ];
@@ -26,6 +28,11 @@ export default function HeaderNav() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
+            onClick={() => {
+              if (item.href === "/quizzes" && pathname.startsWith("/quizzes")) {
+                window.dispatchEvent(new Event(QUIZ_HOME_EVENT));
+              }
+            }}
             className={`whitespace-nowrap rounded-md px-2 py-1.5 text-sm font-medium transition-colors sm:px-3 ${
               active
                 ? "bg-surface text-ink"

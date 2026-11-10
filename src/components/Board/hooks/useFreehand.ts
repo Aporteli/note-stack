@@ -17,8 +17,12 @@ type Save = (
   strokes: Stroke[],
 ) => void;
 
-export function useFreehand(onSave: Save, onDiscard: () => void) {
-  const [strokes, setStrokes] = useState<Stroke[]>([]);
+export function useFreehand(
+  onSave: Save,
+  onDiscard: () => void,
+  initial: Stroke[] = [],
+) {
+  const [strokes, setStrokes] = useState<Stroke[]>(initial);
   const [current, setCurrent] = useState<Stroke | null>(null);
   const [tool, setTool] = useState<FreehandTool>("pencil");
   const [color, setColor] = useState(FREEHAND_COLORS[0].value);
@@ -36,8 +40,13 @@ export function useFreehand(onSave: Save, onDiscard: () => void) {
   function getLocalPoint(event: ReactPointerEvent): [number, number] {
     const svg = svgRef.current;
     if (!svg) return [0, 0];
-    const rect = svg.getBoundingClientRect();
-    return [event.clientX - rect.left, event.clientY - rect.top];
+    const matrix = svg.getScreenCTM();
+    if (!matrix) {
+      const rect = svg.getBoundingClientRect();
+      return [event.clientX - rect.left, event.clientY - rect.top];
+    }
+    const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
+    return [point.x, point.y];
   }
 
   function handlePointerDown(event: ReactPointerEvent) {

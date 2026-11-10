@@ -9,6 +9,7 @@ import { TextSizePicker } from "@/components/flash/deck/TextSizePicker";
 import { deckStatus, type DrawMode, type Layout, type TextSize } from "@/components/flash/lib/deck";
 
 type Props = {
+  backHref: string;
   topicName: string;
   cardCount: number;
   visibleCount: number;
@@ -34,6 +35,7 @@ type Props = {
 };
 
 export function FlashDeckHeader({
+  backHref,
   topicName,
   cardCount,
   visibleCount,
@@ -58,21 +60,18 @@ export function FlashDeckHeader({
   onCreate,
 }: Props) {
   return (
-    <div className="flex shrink-0 flex-col gap-3 border-b border-line px-3 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex shrink-0 flex-col gap-3 border-b border-line px-3 py-1 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
       <div className="min-w-0">
         <Link
-          href="/flash-cards"
+          href={backHref}
           className="mb-1 inline-flex items-center gap-1 text-meta font-medium text-ink-soft hover:text-ink"
         >
           <IconBack size={14} />
-          All topics
+          Back
         </Link>
         <h1 className="font-display text-xl font-semibold tracking-tight text-ink sm:text-2xl">
           {topicName}
         </h1>
-        <p className="truncate text-sm text-ink-soft">
-          {deckStatus(cardCount, layout, query, visibleCount)}
-        </p>
       </div>
       <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:w-auto lg:justify-end">
         <LayoutToggle layout={layout} onChange={onLayout} />

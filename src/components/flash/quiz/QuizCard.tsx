@@ -84,7 +84,6 @@ export function QuizCard({
               <h2 className="font-display text-lead font-semibold text-ink">{quiz.title}</h2>
             </button>
           )}
-          <p className="mt-1 text-meta text-ink-soft">{quiz.topicName}</p>
           <select
             value={quiz.folderId ?? ""}
             onChange={(event) => onMove(quiz.id, event.target.value || null)}

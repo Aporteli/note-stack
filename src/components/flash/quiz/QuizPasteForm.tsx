@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
-import type { BulkParse } from "@/components/flash/aiken";
+import type { BulkParse, BulkQuestion } from "@/components/flash/aiken";
+import { QuizPasteQuestion } from "@/components/flash/quiz/QuizPasteQuestion";
 import { Button } from "@/components/ui/Button";
 import { Field, Textarea } from "@/components/ui/Field";
 
@@ -21,6 +22,8 @@ type Props = {
   onPaste: (value: string) => void;
   onPreview: (event: FormEvent) => void;
   onSave: () => void;
+  onChangeQuestion: (index: number, question: BulkQuestion) => void;
+  onRemoveQuestion: (index: number) => void;
 };
 
 export function QuizPasteForm({
@@ -32,6 +35,8 @@ export function QuizPasteForm({
   onPaste,
   onPreview,
   onSave,
+  onChangeQuestion,
+  onRemoveQuestion,
 }: Props) {
   return (
     <form
@@ -79,28 +84,13 @@ export function QuizPasteForm({
       {preview && preview.questions.length > 0 ? (
         <ol className="flex flex-col gap-3">
           {preview.questions.map((question, index) => (
-            <li
+            <QuizPasteQuestion
               key={`${question.number}-${index}`}
-              className="rounded-card border border-line bg-surface/60 p-4"
-            >
-              <p className="text-meta font-medium uppercase tracking-wide text-ink-faint">
-                Question {question.number}
-              </p>
-              <p className="quiz-copy mt-1 text-ink">{question.prompt}</p>
-              <ul className="mt-3 flex flex-col gap-1.5">
-                {question.options.map((option) => (
-                  <li
-                    key={`${question.number}-${option.text}`}
-                    className={`rounded-lg px-3 py-1.5 text-sm ${
-                      option.correct ? "bg-mint/40 text-ink" : "bg-paper text-ink-soft"
-                    }`}
-                  >
-                    {option.correct ? "Correct · " : ""}
-                    {option.text}
-                  </li>
-                ))}
-              </ul>
-            </li>
+              question={question}
+              index={index}
+              onChange={(next) => onChangeQuestion(index, next)}
+              onRemove={() => onRemoveQuestion(index)}
+            />
           ))}
         </ol>
       ) : null}

@@ -1,6 +1,14 @@
+import type { ArrowRecord } from "@/components/Board/types/arrow";
+import type { FileRecord } from "@/components/Board/types/boardFile";
+import type { TableRecord } from "@/components/Board/types/table";
+import type { HeadingRecord } from "@/components/Board/types/heading";
+import type { LinkRecord } from "@/components/Board/types/link";
+import type { NoteRecord } from "@/components/Board/types/note";
+
 export type CardData = {
   id: string;
   title: string;
+  image?: string | null;
 };
 
 export type ListData = {
@@ -8,6 +16,10 @@ export type ListData = {
   title: string;
   x: number;
   y: number;
+  w: number;
+  h: number;
+  z?: number;
+  locked?: boolean;
   cards: CardData[];
 };
 
@@ -30,6 +42,8 @@ export type DrawingRecord = {
   w: number;
   h: number;
   strokes: string;
+  z?: number;
+  locked?: boolean;
 };
 
 export type DrawingData = {
@@ -39,6 +53,8 @@ export type DrawingData = {
   w: number;
   h: number;
   strokes: Stroke[];
+  z?: number;
+  locked?: boolean;
 };
 
 /* -------------------- Documents -------------------- */
@@ -54,6 +70,8 @@ export type DocumentRecord = {
   content: string;
   x: number;
   y: number;
+  z?: number;
+  locked?: boolean;
 };
 
 export type DocumentData = {
@@ -63,6 +81,8 @@ export type DocumentData = {
   strokes: Stroke[];
   x: number;
   y: number;
+  z?: number;
+  locked?: boolean;
 };
 
 /** Fixed drawing surface inside the document modal. */
@@ -75,6 +95,12 @@ export type BoardData = {
   lists: ListData[];
   drawings: DrawingRecord[];
   documents: DocumentRecord[];
+  notes: NoteRecord[];
+  links: LinkRecord[];
+  arrows: ArrowRecord[];
+  headings: HeadingRecord[];
+  files: FileRecord[];
+  tables: TableRecord[];
 };
 
 export type Position = {
@@ -87,7 +113,13 @@ export type DragType =
   | "list"
   | "new-list"
   | "document"
-  | "new-document";
+  | "new-document"
+  | "new-note"
+  | "new-drawing"
+  | "new-link"
+  | "new-arrow"
+  | "new-heading"
+  | "new-table";
 
 export type ListDragData = {
   type: "list";
@@ -103,10 +135,21 @@ export type DocumentDragData = {
 
 export const NEW_LIST_DRAG_ID = "board-new-list-drag";
 export const NEW_DOCUMENT_DRAG_ID = "board-new-document-drag";
+export const NEW_DRAWING_DRAG_ID = "board-new-drawing-drag";
 
 /* -------------------- Trash -------------------- */
 
-export type ItemType = "list" | "card" | "drawing" | "document";
+export type ItemType =
+  | "list"
+  | "card"
+  | "drawing"
+  | "document"
+  | "note"
+  | "link"
+  | "arrow"
+  | "heading"
+  | "file"
+  | "table";
 
 export type ItemRef = {
   type: ItemType;
@@ -124,6 +167,12 @@ export type TrashBundle = {
   cards: TrashItem[];
   drawings: TrashItem[];
   documents: TrashItem[];
+  notes: TrashItem[];
+  links: TrashItem[];
+  arrows: TrashItem[];
+  headings: TrashItem[];
+  files: TrashItem[];
+  tables: TrashItem[];
 };
 
 export function itemKey(item: ItemRef): string {

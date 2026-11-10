@@ -15,6 +15,14 @@ import {
   moveCard,
   moveListPosition,
 } from "@/app/actions";
+import { placeNewDrawing } from "@/components/Board/lib/draw/placeNewDrawing";
+import { LIST_H, LIST_W } from "@/components/Board/lib/list/size";
+import { placeNewArrow } from "@/components/Board/lib/arrow/placeNewArrow";
+import { placeNewHeading } from "@/components/Board/lib/heading/placeNewHeading";
+import { placeNewTable } from "@/components/Board/lib/table/placeNewTable";
+import { placeNewLink } from "@/components/Board/lib/link/placeNewLink";
+import { liftPictureCard } from "@/components/Board/lib/file/liftPictureCard";
+import { placeNewNote } from "@/components/Board/lib/note/placeNewNote";
 import {
   findCardPosition,
   findDropTarget,
@@ -23,11 +31,17 @@ import {
 import type {
   DocumentData,
   DragType,
+  DrawingData,
   ListData,
   ListDragData,
 } from "@/components/Board/types/board";
+import type { ArrowData } from "@/components/Board/types/arrow";
+import type { HeadingData } from "@/components/Board/types/heading";
+import type { TableData } from "@/components/Board/types/table";
+import type { LinkData } from "@/components/Board/types/link";
+import type { NoteData } from "@/components/Board/types/note";
+import type { FileData } from "@/components/Board/types/boardFile";
 
-const LIST_W = 296;
 const LIST_DROP_OFFSET_Y = 20;
 
 type Options = {
@@ -35,6 +49,13 @@ type Options = {
   setLists: React.Dispatch<React.SetStateAction<ListData[]>>;
   documents: DocumentData[];
   setDocuments: React.Dispatch<React.SetStateAction<DocumentData[]>>;
+  setNotes: React.Dispatch<React.SetStateAction<NoteData[]>>;
+  setDrawings: React.Dispatch<React.SetStateAction<DrawingData[]>>;
+  setLinks: React.Dispatch<React.SetStateAction<LinkData[]>>;
+  setArrows: React.Dispatch<React.SetStateAction<ArrowData[]>>;
+  setHeadings: React.Dispatch<React.SetStateAction<HeadingData[]>>;
+  setTables: React.Dispatch<React.SetStateAction<TableData[]>>;
+  setFiles: React.Dispatch<React.SetStateAction<FileData[]>>;
   boardId: string;
   canvasRef?: React.RefObject<HTMLDivElement | null>;
   onNewListDropped?: () => void;
@@ -54,6 +75,13 @@ export function useBoardDnd({
   setLists,
   documents,
   setDocuments,
+  setNotes,
+  setDrawings,
+  setLinks,
+  setArrows,
+  setHeadings,
+  setTables,
+  setFiles,
   boardId,
   canvasRef,
   onNewListDropped,
@@ -142,6 +170,8 @@ export function useBoardDnd({
         title: "New list",
         x,
         y,
+        w: LIST_W,
+        h: LIST_H,
         cards: [],
       };
       setLists((prev) => [...prev, placeholder]);
@@ -156,6 +186,8 @@ export function useBoardDnd({
                   title: created.title,
                   x: created.x,
                   y: created.y,
+                  w: created.w,
+                  h: created.h,
                   cards: [],
                 }
               : l,
@@ -217,6 +249,78 @@ export function useBoardDnd({
       return;
     }
 
+    if (kind === "new-note") {
+      const pointer = pointerRef.current;
+      const grab = grabRef.current;
+      const canvasEl = canvasRef?.current;
+      initialPointerRef.current = null;
+      pointerRef.current = null;
+      grabRef.current = null;
+      if (!pointer || !grab || !canvasEl) return;
+      await placeNewNote({ boardId, pointer, grab, canvas: canvasEl, setNotes });
+      return;
+    }
+
+    if (kind === "new-heading") {
+      const pointer = pointerRef.current;
+      const grab = grabRef.current;
+      const canvasEl = canvasRef?.current;
+      initialPointerRef.current = null;
+      pointerRef.current = null;
+      grabRef.current = null;
+      if (!pointer || !grab || !canvasEl) return;
+      await placeNewHeading({ boardId, pointer, grab, canvas: canvasEl, setHeadings });
+      return;
+    }
+
+    if (kind === "new-table") {
+      const pointer = pointerRef.current;
+      const grab = grabRef.current;
+      const canvasEl = canvasRef?.current;
+      initialPointerRef.current = null;
+      pointerRef.current = null;
+      grabRef.current = null;
+      if (!pointer || !grab || !canvasEl) return;
+      await placeNewTable({ boardId, pointer, grab, canvas: canvasEl, setTables });
+      return;
+    }
+
+    if (kind === "new-link") {
+      const pointer = pointerRef.current;
+      const grab = grabRef.current;
+      const canvasEl = canvasRef?.current;
+      initialPointerRef.current = null;
+      pointerRef.current = null;
+      grabRef.current = null;
+      if (!pointer || !grab || !canvasEl) return;
+      await placeNewLink({ boardId, pointer, grab, canvas: canvasEl, setLinks });
+      return;
+    }
+
+    if (kind === "new-arrow") {
+      const pointer = pointerRef.current;
+      const grab = grabRef.current;
+      const canvasEl = canvasRef?.current;
+      initialPointerRef.current = null;
+      pointerRef.current = null;
+      grabRef.current = null;
+      if (!pointer || !grab || !canvasEl) return;
+      await placeNewArrow({ boardId, pointer, grab, canvas: canvasEl, setArrows });
+      return;
+    }
+
+    if (kind === "new-drawing") {
+      const pointer = pointerRef.current;
+      const grab = grabRef.current;
+      const canvasEl = canvasRef?.current;
+      initialPointerRef.current = null;
+      pointerRef.current = null;
+      grabRef.current = null;
+      if (!pointer || !grab || !canvasEl) return;
+      await placeNewDrawing({ boardId, pointer, grab, canvas: canvasEl, setDrawings });
+      return;
+    }
+
     /* ---------- EXISTING LIST DRAG ---------- */
     if (kind === "list") {
       const start = active.data.current as ListDragData | undefined;
@@ -243,9 +347,22 @@ export function useBoardDnd({
     }
 
     /* ---------- CARD DRAG ---------- */
-    if (!over) return;
-
     const cardId = active.id as string;
+    if (
+      await liftPictureCard({
+        lists,
+        setLists,
+        setFiles,
+        boardId,
+        cardId,
+        pointer: pointerRef.current,
+        canvas: canvasRef?.current ?? null,
+      })
+    ) {
+      return;
+    }
+
+    if (!over) return;
     if (isTempId(cardId)) return;
 
     const source = findCardPosition(lists, cardId);

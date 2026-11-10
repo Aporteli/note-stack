@@ -8,7 +8,7 @@ import {
   deleteQuizQuestions,
   type QuizData,
 } from "@/app/flash-cards/actions";
-import { parseBulkQuiz, type BulkParse } from "@/components/flash/aiken";
+import { parseBulkQuiz, type BulkParse, type BulkQuestion } from "@/components/flash/aiken";
 import { MAX_OPTIONS } from "@/components/flash/lib/quizBoard";
 
 export function useQuizEditor(quiz: QuizData, busy: boolean) {
@@ -128,6 +128,26 @@ export function useQuizEditor(quiz: QuizData, busy: boolean) {
     setSelectedIds(allQuestionsSelected ? [] : quiz.questions.map((question) => question.id));
   }
 
+  function changePreviewQuestion(index: number, question: BulkQuestion) {
+    setPreview((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        questions: current.questions.map((item, i) => (i === index ? question : item)),
+      };
+    });
+  }
+
+  function removePreviewQuestion(index: number) {
+    setPreview((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        questions: current.questions.filter((_, i) => i !== index),
+      };
+    });
+  }
+
   function changePaste(value: string) {
     setPaste(value);
     setPreview(null);
@@ -159,6 +179,8 @@ export function useQuizEditor(quiz: QuizData, busy: boolean) {
     handleAdd,
     handlePreview,
     handleSavePasted,
+    changePreviewQuestion,
+    removePreviewQuestion,
     confirmDeleteQuestions,
     toggleQuestion,
     toggleAllQuestions,

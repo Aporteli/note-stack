@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 export type ContextMenuItem = {
   label: string;
   icon?: ReactNode;
+  shortcut?: string;
   onClick?: () => void;
   danger?: boolean;
   disabled?: boolean;
@@ -26,7 +27,7 @@ type Props = {
   onClose: () => void;
 };
 
-const MENU_W = 220;
+const MENU_W = 248;
 const MENU_PAD = 8;
 
 export function ContextMenu({ x, y, items, onClose }: Props) {
@@ -93,7 +94,9 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
             type="button"
             role="menuitem"
             disabled={it.disabled}
-            onClick={() => {
+            onMouseDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
               if (it.disabled) return;
               it.onClick?.();
               onClose();
@@ -109,7 +112,10 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
                 {it.icon}
               </span>
             )}
-            <span>{it.label}</span>
+            <span className="flex-1">{it.label}</span>
+            {it.shortcut ? (
+              <span className="text-xs text-slate-400">{it.shortcut}</span>
+            ) : null}
           </button>
         );
       })}

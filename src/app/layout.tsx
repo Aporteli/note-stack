@@ -31,8 +31,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable}`}>
-      <body className="flex h-dvh flex-col overflow-hidden bg-paper font-sans text-ink antialiased">
+    <html lang="en" className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
+      <body
+        className="flex h-dvh flex-col overflow-hidden bg-paper font-sans text-ink antialiased"
+        suppressHydrationWarning
+      >
         <Header />
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>
       </body>

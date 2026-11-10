@@ -10,7 +10,7 @@ type Props = {
 export function CardSizeControl({ width, height, onWidth, onHeight }: Props) {
   return (
     <div
-      className="flex w-full min-w-0 flex-col gap-2 rounded-lg border border-line bg-paper px-3 py-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3 sm:py-1.5"
+      className="flex w-full min-w-0 flex-col gap-2 rounded-lg border border-line bg-paper px-3 py-2 sm:h-9 sm:w-auto sm:flex-row sm:items-center sm:gap-3 sm:py-0"
       role="group"
       aria-label="Card size"
     >

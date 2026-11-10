@@ -29,6 +29,9 @@ export function useDrawingDrag({
 
   const startDrag = useCallback(
     (id: string, clientX: number, clientY: number, shift: boolean) => {
+      const origin = drawingsRef.current.find((drawing) => drawing.id === id);
+      if (origin?.locked) return;
+
       let nextSelection: Set<string>;
       if (shift) {
         nextSelection = new Set(selectedDrawingIds);
@@ -48,7 +51,7 @@ export function useDrawingDrag({
 
       const startPositions = new Map<string, { x: number; y: number }>();
       for (const drawing of drawingsRef.current) {
-        if (nextSelection.has(drawing.id)) {
+        if (nextSelection.has(drawing.id) && !drawing.locked) {
           startPositions.set(drawing.id, { x: drawing.x, y: drawing.y });
         }
       }

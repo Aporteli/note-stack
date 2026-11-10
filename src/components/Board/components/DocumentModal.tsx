@@ -6,7 +6,6 @@ import { useDocumentSketch } from "@/components/Board/hooks/useDocumentSketch";
 import type { DocumentData, Stroke } from "@/components/Board/types/board";
 import { useBoardTools } from "@/components/Board/components/document/boardTools";
 import { DrawToolbar } from "@/components/Board/components/document/DrawToolbar";
-import { FormatToolbar } from "@/components/Board/components/document/FormatToolbar";
 import { DocumentModalFooter } from "@/components/Board/components/document/DocumentModalFooter";
 import { DocumentModalHeader } from "@/components/Board/components/document/DocumentModalHeader";
 import { DocumentSketchPage, DocumentWritePage } from "@/components/Board/components/document/DocumentPages";
@@ -37,9 +36,8 @@ export function DocumentModal({ document: doc, onSave, onClose }: Props) {
   }
 
   const tools = (
-    <div className="flex w-max flex-wrap items-center gap-2">
-      <FormatToolbar hint="Switch to Write to format text" />
-      <span className="mx-0.5 hidden h-5 w-px shrink-0 bg-slate-200 sm:block" aria-hidden />
+    <div className="flex w-max flex-wrap items-center gap-2 pl-1">
+      <span className="mx-0.5 h-5 w-px shrink-0 bg-slate-200" aria-hidden />
       <DrawToolbar
         tool={sketch.tool}
         showType={sketch.tab === "write"}

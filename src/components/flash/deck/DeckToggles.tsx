@@ -1,7 +1,6 @@
 import type { DrawMode, Layout } from "@/components/flash/lib/deck";
 
-const segment =
-  "h-8 rounded-md px-2.5 text-meta font-medium";
+const segment = "h-full rounded-md px-2.5 text-meta font-medium";
 
 export function LayoutToggle({
   layout,
@@ -12,7 +11,7 @@ export function LayoutToggle({
 }) {
   return (
     <div
-      className="flex items-center rounded-lg border border-line bg-paper p-0.5"
+      className="flex h-9 items-center rounded-lg border border-line bg-paper p-0.5"
       role="group"
       aria-label="Page layout"
     >
@@ -49,7 +48,7 @@ export function DrawModeToggle({
 }) {
   return (
     <div
-      className="flex items-center rounded-lg border border-line bg-paper p-0.5"
+      className="flex h-9 items-center rounded-lg border border-line bg-paper p-0.5"
       role="group"
       aria-label="Random draw mode"
     >

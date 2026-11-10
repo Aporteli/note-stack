@@ -1,6 +1,7 @@
 import { ConfirmDialog } from "@/components/Board/components/ConfirmDialog";
 import { EmptyState } from "@/components/ui/Feedback";
 import type { useQuizBoard } from "@/components/flash/hooks/useQuizBoard";
+import type { QuizSort } from "@/components/flash/lib/quizBoard";
 import { QuizBreadcrumbs, QuizGroupForm } from "@/components/flash/quiz/QuizGroupBar";
 import { QuizCreateForm } from "@/components/flash/quiz/QuizCreateForm";
 import { QuizFolderList } from "@/components/flash/quiz/QuizFolderList";
@@ -16,30 +17,43 @@ export function QuizLibrary({ board }: { board: Board }) {
         folderId={board.folderId}
         onOpen={board.setFolderId}
       />
-      <QuizGroupForm
-        folderId={board.folderId}
-        name={board.groupName}
-        error={board.groupError}
-        pending={board.isPending}
-        onName={(value) => {
-          board.setGroupName(value);
-          if (board.groupError) board.setGroupError("");
-        }}
-        onSubmit={board.handleCreateGroup}
-      />
-      <QuizCreateForm
-        topics={board.topics}
-        topicId={board.topicId}
-        title={board.title}
-        error={board.createError}
-        pending={board.isPending}
-        onTopic={board.setTopicId}
-        onTitle={(value) => {
-          board.setTitle(value);
-          if (board.createError) board.setCreateError("");
-        }}
-        onSubmit={board.handleCreate}
-      />
+      <div className="flex flex-col gap-2">
+        <QuizGroupForm
+          folderId={board.folderId}
+          name={board.groupName}
+          error={board.groupError}
+          pending={board.isPending}
+          onName={(value) => {
+            board.setGroupName(value);
+            if (board.groupError) board.setGroupError("");
+          }}
+          onSubmit={board.handleCreateGroup}
+        />
+        <QuizCreateForm
+          title={board.title}
+          error={board.createError}
+          pending={board.isPending}
+          onTitle={(value) => {
+            board.setTitle(value);
+            if (board.createError) board.setCreateError("");
+          }}
+          onSubmit={board.handleCreate}
+        />
+        {board.here.length > 0 ? (
+          <div className="flex justify-start">
+            <select
+              value={board.sort}
+              onChange={(event) => board.setSort(event.target.value as QuizSort)}
+              aria-label="Sort quizzes"
+              className="ns-field h-9 w-full sm:w-[394px]"
+            >
+              <option value="name">Alphabetical</option>
+              <option value="created">Date created</option>
+              <option value="count">Number of questions</option>
+            </select>
+          </div>
+        ) : null}
+      </div>
       <QuizFolderList
         folders={board.folders}
         childFolders={board.childFolders}
@@ -51,10 +65,10 @@ export function QuizLibrary({ board }: { board: Board }) {
         onBeginRename={board.beginRenameFolder}
         onCommit={board.commitFolderName}
         onCancelRename={() => board.setEditingFolderId(null)}
-        onDelete={board.removeFolder}
+        onDelete={board.setPendingFolder}
       />
 
-      {board.topics.length > 0 && board.here.length === 0 && board.childFolders.length === 0 ? (
+      {board.here.length === 0 && board.childFolders.length === 0 ? (
         <EmptyState
           title="Nothing in this group yet"
           body="Add a subgroup, or create a quiz and put it in this group."
@@ -63,7 +77,6 @@ export function QuizLibrary({ board }: { board: Board }) {
         <QuizList
           quizzes={board.here}
           folders={board.folders}
-          sort={board.sort}
           selecting={board.selecting}
           selectedIds={board.selectedQuizIds}
           allSelected={board.allQuizzesSelected}
@@ -71,7 +84,6 @@ export function QuizLibrary({ board }: { board: Board }) {
           pending={board.isPending}
           editingQuizId={board.editingQuizId}
           quizDraft={board.quizDraft}
-          onSort={board.setSort}
           onToggleAll={board.toggleAllQuizzes}
           onBulkDelete={() => board.setPendingBulkDelete(true)}
           onDraft={board.setQuizDraft}
@@ -89,9 +101,21 @@ export function QuizLibrary({ board }: { board: Board }) {
       ) : null}
 
       <ConfirmDialog
+        open={board.pendingFolder !== null}
+        title="Delete this group?"
+        body="Quizzes and subgroups in this group move up to the group above it."
+        confirmLabel="Delete group"
+        tone="danger"
+        busy={board.isPending}
+        onCancel={() => {
+          if (!board.isPending) board.setPendingFolder(null);
+        }}
+        onConfirm={board.confirmDeleteFolder}
+      />
+      <ConfirmDialog
         open={board.pendingDelete !== null}
         title="Delete this quiz?"
-        body="The questions and answers will be removed. Flash cards stay as they are."
+        body="The questions and answers will be removed."
         confirmLabel="Delete quiz"
         tone="danger"
         busy={board.isPending}
@@ -107,7 +131,7 @@ export function QuizLibrary({ board }: { board: Board }) {
             ? "Delete this quiz?"
             : `Delete ${board.selectedQuizzes.length} quizzes?`
         }
-        body="The questions and answers will be removed. Flash cards stay as they are."
+        body="The questions and answers will be removed."
         confirmLabel="Delete quizzes"
         tone="danger"
         busy={board.isPending}

@@ -14,6 +14,7 @@ type CardProps = {
     dueDate?: Date | string | null;
     labels?: TagTone[];
     members?: string[];
+    image?: string | null;
   };
   onOpen?: (id: string) => void;
   selected?: boolean;
@@ -53,16 +54,23 @@ export function Card({ card, onOpen, selected = false }: CardProps) {
         e.stopPropagation();
         cardPointerDown?.(e);
       }}
-      onClick={(e) => {
+      onDoubleClick={(e) => {
         e.stopPropagation();
         onOpen?.(card.id);
       }}
       data-item-type="card"
       data-item-id={card.id}
-      className={`ns-card group mb-2 cursor-grab p-3 active:cursor-grabbing ${
-        selected ? "ring-2 ring-blue-500" : ""
+      className={`group mb-2 cursor-grab bg-white p-3 text-slate-800 shadow-sm active:cursor-grabbing ${
+        selected ? "border-2 border-black" : "border border-slate-200"
       }`}
     >
+      {card.image ? (
+        <img
+          src={card.image}
+          alt={card.title || "Pasted picture"}
+          className="mb-2 max-h-44 w-full object-contain"
+        />
+      ) : null}
       {card.labels && card.labels.length > 0 && (
         <div className="mb-2">
           <TagBar tones={card.labels} />
@@ -70,10 +78,10 @@ export function Card({ card, onOpen, selected = false }: CardProps) {
       )}
 
       <div className="flex items-start gap-2">
-        <p className="flex-1 text-body text-ink">{card.title}</p>
+        {card.title ? <p className="flex-1 text-sm text-slate-800">{card.title}</p> : <span className="flex-1" />}
         <IconGrip
           size={16}
-          className="mt-0.5 shrink-0 text-ink-faint opacity-0 transition-opacity group-hover:opacity-100"
+          className="mt-0.5 shrink-0 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100"
         />
       </div>
 
@@ -81,7 +89,7 @@ export function Card({ card, onOpen, selected = false }: CardProps) {
         <div className="mt-2.5 flex flex-wrap items-center gap-2">
           {due && <DueDate date={due} />}
           {card.description && (
-            <span className="text-ink-faint" title="This card has a description">
+            <span className="text-slate-400" title="This card has a description">
               <IconDescription size={15} />
             </span>
           )}
@@ -91,9 +99,12 @@ export function Card({ card, onOpen, selected = false }: CardProps) {
   );
 }
 
-export function CardDragPreview({ title }: { title: string }) {
+export function CardDragPreview({ title, image }: { title: string; image?: string | null }) {
   return (
-    <div className="ns-card ns-card--dragging w-list p-3 text-body">
+    <div className="w-list border-2 border-slate-800 bg-white p-3 text-sm text-slate-800 shadow-lift-3">
+      {image ? (
+        <img src={image} alt={title || "Picture"} className="mb-2 max-h-44 w-full object-contain" />
+      ) : null}
       {title}
     </div>
   );

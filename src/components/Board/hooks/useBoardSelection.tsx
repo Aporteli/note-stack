@@ -13,26 +13,44 @@ import type {
   ItemType,
   ListData,
 } from "@/components/Board/types/board";
+import type { ArrowData } from "@/components/Board/types/arrow";
+import type { FileData } from "@/components/Board/types/boardFile";
+import type { TableData } from "@/components/Board/types/table";
+import type { HeadingData } from "@/components/Board/types/heading";
+import type { LinkData } from "@/components/Board/types/link";
+import type { NoteData } from "@/components/Board/types/note";
 import { itemKey } from "@/components/Board/types/board";
 
 type MenuState = { x: number; y: number; items: ItemRef[] };
 
 type Args = {
   boardId: string;
-  drawMode: boolean;
   openDocumentId: string | null;
+  openDrawingId: string | null;
   setLists: Dispatch<SetStateAction<ListData[]>>;
   setDrawings: Dispatch<SetStateAction<DrawingData[]>>;
   setDocuments: Dispatch<SetStateAction<DocumentData[]>>;
+  setNotes: Dispatch<SetStateAction<NoteData[]>>;
+  setLinks: Dispatch<SetStateAction<LinkData[]>>;
+  setArrows: Dispatch<SetStateAction<ArrowData[]>>;
+  setHeadings: Dispatch<SetStateAction<HeadingData[]>>;
+  setFiles: Dispatch<SetStateAction<FileData[]>>;
+  setTables: Dispatch<SetStateAction<TableData[]>>;
 };
 
 export function useBoardSelection({
   boardId,
-  drawMode,
   openDocumentId,
+  openDrawingId,
   setLists,
   setDrawings,
   setDocuments,
+  setNotes,
+  setLinks,
+  setArrows,
+  setHeadings,
+  setFiles,
+  setTables,
 }: Args) {
   const [selectedItemKeys, setSelectedItemKeys] = useState<Set<string>>(new Set());
   const [selectedDrawingIds, setSelectedDrawingIds] = useState<Set<string>>(new Set());
@@ -58,8 +76,14 @@ export function useBoardSelection({
       );
       setDrawings((prev) => prev.filter((drawing) => !ids.drawings.has(drawing.id)));
       setDocuments((prev) => prev.filter((doc) => !ids.documents.has(doc.id)));
+      setNotes((prev) => prev.filter((note) => !ids.notes.has(note.id)));
+      setLinks((prev) => prev.filter((link) => !ids.links.has(link.id)));
+      setArrows((prev) => prev.filter((arrow) => !ids.arrows.has(arrow.id)));
+      setHeadings((prev) => prev.filter((heading) => !ids.headings.has(heading.id)));
+      setFiles((prev) => prev.filter((file) => !ids.files.has(file.id)));
+      setTables((prev) => prev.filter((table) => !ids.tables.has(table.id)));
     },
-    [setDocuments, setDrawings, setLists],
+    [setArrows, setDocuments, setDrawings, setFiles, setHeadings, setLinks, setLists, setNotes, setTables],
   );
 
   const handleContextMenu = useCallback(
@@ -167,7 +191,7 @@ export function useBoardSelection({
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (openDocumentId) return;
+      if (openDocumentId || openDrawingId) return;
       const tag = (event.target as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       if ((event.target as HTMLElement | null)?.isContentEditable) return;
@@ -180,7 +204,6 @@ export function useBoardSelection({
 
       if (
         (event.key === "Delete" || event.key === "Backspace") &&
-        !drawMode &&
         selectedItemKeys.size > 0
       ) {
         event.preventDefault();
@@ -197,9 +220,9 @@ export function useBoardSelection({
   }, [
     boardId,
     clearAllSelections,
-    drawMode,
     dropItems,
     openDocumentId,
+    openDrawingId,
     selectedItemKeys,
   ]);
 

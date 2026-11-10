@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import type { FormEvent, PointerEvent } from "react";
 import {
   createQuiz,
@@ -15,16 +15,14 @@ import {
   type QuizFolderData,
   type QuizListItem,
 } from "@/app/flash-cards/actions";
-import { quizCrumbs, quizzesHere, type QuizSort } from "@/components/flash/lib/quizBoard";
+import { QUIZ_HOME_EVENT, quizCrumbs, quizzesHere, type QuizSort } from "@/components/flash/lib/quizBoard";
 
 type Args = {
-  topics: { id: string; name: string }[];
   quizzes: QuizListItem[];
   folders: QuizFolderData[];
 };
 
-export function useQuizBoard({ topics, quizzes, folders }: Args) {
-  const [topicId, setTopicId] = useState(topics[0]?.id ?? "");
+export function useQuizBoard({ quizzes, folders }: Args) {
   const [folderId, setFolderId] = useState<string | null>(null);
   const [groupName, setGroupName] = useState("");
   const [groupError, setGroupError] = useState("");
@@ -40,10 +38,28 @@ export function useQuizBoard({ topics, quizzes, folders }: Args) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [takingId, setTakingId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<QuizListItem | null>(null);
+  const [pendingFolder, setPendingFolder] = useState<QuizFolderData | null>(null);
   const [selectedQuizIds, setSelectedQuizIds] = useState<string[]>([]);
   const [pendingBulkDelete, setPendingBulkDelete] = useState(false);
   const [sort, setSort] = useState<QuizSort>("created");
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    function showLibrary() {
+      setTakingId(null);
+      setEditingId(null);
+      setFolderId(null);
+      setSelecting(false);
+      setSelectedQuizIds([]);
+      setPendingDelete(null);
+      setPendingFolder(null);
+      setPendingBulkDelete(false);
+      setEditingFolderId(null);
+      setEditingQuizId(null);
+    }
+    window.addEventListener(QUIZ_HOME_EVENT, showLibrary);
+    return () => window.removeEventListener(QUIZ_HOME_EVENT, showLibrary);
+  }, []);
 
   const here = quizzesHere(quizzes, folderId, sort);
   const childFolders = folders.filter((folder) => (folder.parentId ?? null) === folderId);
@@ -56,17 +72,13 @@ export function useQuizBoard({ topics, quizzes, folders }: Args) {
   function handleCreate(event: FormEvent) {
     event.preventDefault();
     const trimmed = title.trim();
-    if (!topicId) {
-      setCreateError("Create a topic before you add a quiz.");
-      return;
-    }
     if (!trimmed) {
       setCreateError("Name the quiz first.");
       return;
     }
     setCreateError("");
     startTransition(async () => {
-      const result = await createQuiz(topicId, trimmed, folderId);
+      const result = await createQuiz(trimmed, folderId);
       if (!result.ok) {
         setCreateError(result.error);
         return;
@@ -134,10 +146,13 @@ export function useQuizBoard({ topics, quizzes, folders }: Args) {
     });
   }
 
-  function removeFolder(folder: QuizFolderData) {
+  function confirmDeleteFolder() {
+    if (!pendingFolder) return;
+    const folder = pendingFolder;
     startTransition(async () => {
       await deleteQuizFolder(folder.id);
       if (folderId === folder.id) setFolderId(folder.parentId);
+      setPendingFolder(null);
     });
   }
 
@@ -205,11 +220,8 @@ export function useQuizBoard({ topics, quizzes, folders }: Args) {
   }
 
   return {
-    topics,
     quizzes,
     folders,
-    topicId,
-    setTopicId,
     folderId,
     setFolderId,
     groupName,
@@ -235,6 +247,8 @@ export function useQuizBoard({ topics, quizzes, folders }: Args) {
     setTakingId,
     pendingDelete,
     setPendingDelete,
+    pendingFolder,
+    setPendingFolder,
     selectedQuizIds,
     pendingBulkDelete,
     setPendingBulkDelete,
@@ -252,9 +266,9 @@ export function useQuizBoard({ topics, quizzes, folders }: Args) {
     handleCreateGroup,
     confirmDelete,
     confirmBulkDelete,
+    confirmDeleteFolder,
     moveQuiz,
     deleteQuestion,
-    removeFolder,
     beginRenameFolder,
     commitFolderName,
     beginHold,

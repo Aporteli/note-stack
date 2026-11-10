@@ -1,0 +1,23 @@
+export const HEADING_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS "Heading" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "boardId" TEXT NOT NULL,
+  "text" TEXT NOT NULL DEFAULT '',
+  "x" REAL NOT NULL,
+  "y" REAL NOT NULL,
+  "w" REAL NOT NULL DEFAULT 640,
+  "h" REAL NOT NULL DEFAULT 96,
+  "z" INTEGER NOT NULL DEFAULT 0,
+  "locked" BOOLEAN NOT NULL DEFAULT 0,
+  "fontSize" INTEGER NOT NULL DEFAULT 28,
+  "color" TEXT NOT NULL DEFAULT '#1e293b',
+  "bold" BOOLEAN NOT NULL DEFAULT 0,
+  "align" TEXT NOT NULL DEFAULT 'center',
+  "trashedAt" DATETIME,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Heading_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "Heading_boardId_idx" ON "Heading"("boardId");
+CREATE INDEX IF NOT EXISTS "Heading_boardId_trashedAt_idx" ON "Heading"("boardId", "trashedAt");
+`;

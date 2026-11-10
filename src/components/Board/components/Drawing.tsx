@@ -1,5 +1,8 @@
 "use client";
 
+import { useRef } from "react";
+import { useDrawingMenu } from "@/components/Board/components/draw/menu/useDrawingMenu";
+import { bandZ } from "@/components/Board/components/itemMenu/bandZ";
 import type { DrawingData, Stroke } from "@/components/Board/types/board";
 
 export function pointsToPath(points: [number, number][]): string {
@@ -47,31 +50,59 @@ export function DrawingSvg({
 }
 
 type Props = {
+  boardId: string;
   drawing: DrawingData;
   selected: boolean;
   dragging: boolean;
+  onOpen: (id: string) => void;
   onStartDrag: (
     id: string,
     clientX: number,
     clientY: number,
     shift: boolean,
   ) => void;
+  onDelete: (id: string) => void;
+  onCreated: (drawing: DrawingData) => void;
+  onLock: (id: string, locked: boolean) => void;
+  onFront: () => void;
+  onBack: () => void;
+  onSelect: () => void;
 };
 
 export function Drawing({
+  boardId,
   drawing,
   selected,
   dragging,
+  onOpen,
   onStartDrag,
+  onDelete,
+  onCreated,
+  onLock,
+  onFront,
+  onBack,
+  onSelect,
 }: Props) {
+  const startRef = useRef<{ x: number; y: number } | null>(null);
+  const menu = useDrawingMenu({
+    drawing,
+    boardId,
+    selected,
+    onSelect,
+    onDelete,
+    onCreated,
+    onLock,
+    onFront,
+    onBack,
+  });
   const style: React.CSSProperties = {
     position: "absolute",
     left: drawing.x,
     top: drawing.y,
     width: drawing.w,
     height: drawing.h,
-    zIndex: dragging ? 60 : selected ? 40 : 30,
-    cursor: dragging ? "grabbing" : "grab",
+    zIndex: bandZ(30, 40, 60, drawing.z, selected, dragging),
+    cursor: drawing.locked ? "default" : dragging ? "grabbing" : "grab",
     touchAction: "none",
     userSelect: "none",
   };
@@ -81,17 +112,34 @@ export function Drawing({
       style={style}
       data-item-type="drawing"
       data-item-id={drawing.id}
+      onContextMenu={menu.onContextMenu}
       onPointerDown={(e) => {
         e.stopPropagation();
+        if (e.button !== 0 || drawing.locked) return;
+        startRef.current = { x: e.clientX, y: e.clientY };
         onStartDrag(drawing.id, e.clientX, e.clientY, e.shiftKey);
       }}
-      className={
-        selected
-          ? "rounded outline outline-2 outline-blue-500 outline-offset-4"
-          : "rounded hover:outline hover:outline-1 hover:outline-slate-400/40 hover:outline-offset-4"
-      }
+      onDoubleClick={(e) => {
+        if (e.shiftKey) return;
+        const start = startRef.current;
+        const movedX = start ? e.clientX - start.x : 0;
+        const movedY = start ? e.clientY - start.y : 0;
+        if (Math.abs(movedX) + Math.abs(movedY) < 5) {
+          e.stopPropagation();
+          onOpen(drawing.id);
+        }
+      }}
+      className={`overflow-hidden border-2 bg-white ${
+        selected ? "border-black" : "border-slate-200"
+      }`}
     >
+      {drawing.strokes.length === 0 ? (
+        <p className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-slate-400">
+          Double-click to draw
+        </p>
+      ) : null}
       <DrawingSvg strokes={drawing.strokes} w={drawing.w} h={drawing.h} />
+      {menu.menu}
     </div>
   );
 }

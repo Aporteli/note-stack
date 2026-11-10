@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 model User {
@@ -13,11 +13,13 @@ model User {
   name        String?
   boards      Board[]
   flashTopics FlashTopic[]
+  flashFolders FlashFolder[]
   flashCards  FlashCard[]
   quizzes     Quiz[]
   quizFolders QuizFolder[]
   weekPlans   WeekPlan[]
   weekSlots   WeekSlot[]
+  diagrams    Diagram[]
   createdAt   DateTime     @default(now())
 }
 
@@ -50,17 +52,34 @@ model WeekSlot {
   @@index([planId])
 }
 
-model FlashTopic {
-  id        String      @id @default(cuid())
+model FlashFolder {
+  id        String        @id @default(cuid())
   name      String
   userId    String
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    FlashFolder?  @relation("FlashFolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  FlashFolder[] @relation("FlashFolderTree")
+  topics    FlashTopic[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([userId, parentId])
+}
+
+model FlashTopic {
+  id        String       @id @default(cuid())
+  name      String
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folderId  String?
+  folder    FlashFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   cards     FlashCard[]
-  quizzes   Quiz[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   @@index([userId, createdAt])
+  @@index([folderId])
 }
 
 model Board {
@@ -71,6 +90,12 @@ model Board {
   lists     List[]
   drawings  Drawing[]
   documents Document[]
+  notes     Note[]
+  links     Link[]
+  arrows    Arrow[]
+  headings  Heading[]
+  files     BoardFile[]
+  tables    BoardTable[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 }
@@ -83,6 +108,10 @@ model List {
   cards     Card[]
   x         Float     @default(24)
   y         Float     @default(24)
+  w         Float     @default(296)
+  h         Float     @default(320)
+  z         Int       @default(0)
+  locked    Boolean   @default(false)
   trashedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -95,6 +124,7 @@ model Card {
   id          String    @id @default(cuid())
   title       String
   description String?
+  image       String?
   listId      String
   list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
   order       Int
@@ -116,6 +146,8 @@ model Drawing {
   w         Float
   h         Float
   strokes   String
+  z         Int       @default(0)
+  locked    Boolean   @default(false)
   trashedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -157,8 +189,6 @@ model QuizFolder {
 model Quiz {
   id        String         @id @default(cuid())
   title     String
-  topicId   String
-  topic     FlashTopic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
   userId    String
   user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   folderId  String?
@@ -168,7 +198,6 @@ model Quiz {
   updatedAt DateTime       @updatedAt
 
   @@index([userId, createdAt])
-  @@index([topicId, createdAt])
   @@index([folderId])
 }
 
@@ -204,6 +233,140 @@ model Document {
   content   String    @default("{\"text\":\"\",\"strokes\":[]}")
   x         Float
   y         Float
+  z         Int       @default(0)
+  locked    Boolean   @default(false)
+  trashedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([boardId])
+  @@index([boardId, trashedAt])
+}
+
+model Link {
+  id          String    @id @default(cuid())
+  boardId     String
+  board       Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  url         String    @default("")
+  title       String    @default("")
+  description String    @default("")
+  image       String    @default("")
+  icon        String    @default("")
+  x           Float
+  y           Float
+  w           Float     @default(300)
+  h           Float     @default(48)
+  trashedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([boardId])
+  @@index([boardId, trashedAt])
+}
+
+model Arrow {
+  id        String    @id @default(cuid())
+  boardId   String
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  x1        Float
+  y1        Float
+  x2        Float
+  y2        Float
+  fromType  String    @default("")
+  fromId    String    @default("")
+  fromSide  String    @default("")
+  toType    String    @default("")
+  toId      String    @default("")
+  toSide    String    @default("")
+  trashedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([boardId])
+  @@index([boardId, trashedAt])
+}
+
+model BoardFile {
+  id        String    @id @default(cuid())
+  boardId   String
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  name      String
+  mime      String    @default("")
+  size      BigInt    @default(0)
+  kind      String    @default("file")
+  x         Float
+  y         Float
+  trashedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([boardId])
+  @@index([boardId, trashedAt])
+}
+
+model BoardTable {
+  id        String    @id @default(cuid())
+  boardId   String
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  x         Float
+  y         Float
+  cols      Int       @default(4)
+  rows      Int       @default(7)
+  cells     String    @default("{}")
+  trashedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([boardId])
+  @@index([boardId, trashedAt])
+}
+
+model Heading {
+  id        String    @id @default(cuid())
+  boardId   String
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  text      String    @default("")
+  x         Float
+  y         Float
+  w         Float     @default(640)
+  h         Float     @default(96)
+  z         Int       @default(0)
+  locked    Boolean   @default(false)
+  fontSize  Int       @default(28)
+  color     String    @default("#1e293b")
+  bold      Boolean   @default(false)
+  align     String    @default("center")
+  trashedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([boardId])
+  @@index([boardId, trashedAt])
+}
+
+model Diagram {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String   @default("Untitled diagram")
+  document  String   @default("{\"shapes\":[],\"connectors\":[]}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+}
+
+model Note {
+  id        String    @id @default(cuid())
+  boardId   String
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  text      String    @default("")
+  x         Float
+  y         Float
+  w         Float     @default(320)
+  h         Float     @default(320)
+  z         Int       @default(0)
+  locked    Boolean   @default(false)
   trashedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

@@ -19,7 +19,7 @@ export function TrashTrigger({ open, total, triggerRef, onToggle }: Props) {
         aria-label="Trash"
         title="Trash"
         className={`
-          relative inline-flex h-9 w-9 items-center justify-center rounded-lg
+          relative inline-flex h-9 w-9 items-center justify-center 
           text-slate-700 ring-1 ring-slate-200 transition-colors
           hover:bg-slate-50
           ${open ? "bg-slate-100" : "bg-white"}

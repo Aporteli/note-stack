@@ -1,9 +1,14 @@
 "use server";
 
+import { copyStoredFile } from "@/lib/files/copyStoredFile";
+import { fileSize } from "@/lib/files/fileSize";
+import { visibleBoardFiles } from "@/lib/files/visibleBoardFiles";
+import { removeStoredFile } from "@/lib/files/removeStoredFile";
 import { prisma } from "@/lib/prisma";
 import { ownerId } from "@/lib/owner";
 import { revalidatePath } from "next/cache";
 import type { ItemRef, TrashBundle } from "@/components/Board/types/board";
+import { LIST_W, clampListHeight, clampListWidth } from "@/components/Board/lib/list/size";
 
 /* -------------------- HELPERS -------------------- */
 
@@ -54,7 +59,7 @@ export async function deleteBoard(id: string) {
 export async function getBoard(boardId: string) {
   const userId = await ownerId();
   if (!userId) return null;
-  return prisma.board.findFirst({
+  const board = await prisma.board.findFirst({
     where: { id: boardId, userId },
     include: {
       lists: {
@@ -68,13 +73,26 @@ export async function getBoard(boardId: string) {
       },
       drawings: { where: { trashedAt: null } },
       documents: { where: { trashedAt: null } },
+      notes: { where: { trashedAt: null } },
+      links: { where: { trashedAt: null } },
+      arrows: { where: { trashedAt: null } },
+      headings: { where: { trashedAt: null } },
+      files: { where: { trashedAt: null } },
+      tables: { where: { trashedAt: null } },
     },
   });
+  if (!board) return null;
+  return {
+    ...board,
+    files: visibleBoardFiles(
+      board.files,
+      board.lists.flatMap((list) => list.cards),
+    ).map((file) => ({ ...file, size: fileSize(file.size) })),
+  };
 }
 
 /* -------------------- LISTS -------------------- */
 
-const LIST_W = 296;
 const LIST_GAP = 16;
 const LIST_PAD = 24;
 
@@ -103,10 +121,34 @@ export async function createListAt(
   return list;
 }
 
+export async function renameList(listId: string, title: string, boardId: string) {
+  if (isTempId(listId)) return;
+  const next = title.trim();
+  if (!next) return;
+  await prisma.list.updateMany({
+    where: { id: listId, boardId, trashedAt: null },
+    data: { title: next },
+  });
+  revalidatePath(`/board/${boardId}`);
+}
+
 export async function deleteList(listId: string, boardId: string) {
   // Idempotent — never throws for missing rows.
   await prisma.list.deleteMany({ where: { id: listId } });
   revalidatePath(`/board/${boardId}`);
+}
+
+export async function resizeList(
+  listId: string,
+  w: number,
+  h: number,
+  boardId: string,
+) {
+  if (isTempId(listId)) return;
+  await prisma.list.updateMany({
+    where: { id: listId, boardId, trashedAt: null },
+    data: { w: clampListWidth(w), h: clampListHeight(h) },
+  });
 }
 
 export async function moveListPosition(
@@ -143,6 +185,23 @@ export async function createCard(
   const order = last ? last.order + 1 : 0;
   await prisma.card.create({ data: { title, listId, order } });
   revalidatePath(`/board/${boardId}`);
+}
+
+export async function createPictureCard(listId: string, image: string, boardId: string) {
+  if (isTempId(listId)) return null;
+  if (!image.startsWith("data:image/") || image.length > 5_500_000) return null;
+  const last = await prisma.card.findFirst({
+    where: { listId, trashedAt: null },
+    orderBy: { order: "desc" },
+    select: { order: true },
+  });
+  const order = last ? last.order + 1 : 0;
+  const card = await prisma.card.create({
+    data: { title: "", listId, order },
+  });
+  await prisma.$executeRaw`UPDATE "Card" SET "image" = ${image} WHERE "id" = ${card.id}`;
+  revalidatePath(`/board/${boardId}`);
+  return { id: card.id, title: card.title, image };
 }
 
 export async function deleteCard(cardId: string, boardId: string) {
@@ -294,7 +353,7 @@ export async function moveDocumentPosition(
 /* -------------------- TRASH -------------------- */
 
 export async function getTrash(boardId: string): Promise<TrashBundle> {
-  const [lists, cards, drawings, documents] = await Promise.all([
+  const [lists, cards, drawings, documents, notes, links, arrows, headings, files, tables] = await Promise.all([
     prisma.list.findMany({
       where: { boardId, trashedAt: { not: null } },
       orderBy: { trashedAt: "desc" },
@@ -319,6 +378,36 @@ export async function getTrash(boardId: string): Promise<TrashBundle> {
       where: { boardId, trashedAt: { not: null } },
       orderBy: { trashedAt: "desc" },
       select: { id: true, title: true, trashedAt: true },
+    }),
+    prisma.note.findMany({
+      where: { boardId, trashedAt: { not: null } },
+      orderBy: { trashedAt: "desc" },
+      select: { id: true, text: true, trashedAt: true },
+    }),
+    prisma.link.findMany({
+      where: { boardId, trashedAt: { not: null } },
+      orderBy: { trashedAt: "desc" },
+      select: { id: true, title: true, url: true, trashedAt: true },
+    }),
+    prisma.arrow.findMany({
+      where: { boardId, trashedAt: { not: null } },
+      orderBy: { trashedAt: "desc" },
+      select: { id: true, trashedAt: true },
+    }),
+    prisma.heading.findMany({
+      where: { boardId, trashedAt: { not: null } },
+      orderBy: { trashedAt: "desc" },
+      select: { id: true, text: true, trashedAt: true },
+    }),
+    prisma.boardFile.findMany({
+      where: { boardId, trashedAt: { not: null } },
+      orderBy: { trashedAt: "desc" },
+      select: { id: true, name: true, trashedAt: true },
+    }),
+    prisma.boardTable.findMany({
+      where: { boardId, trashedAt: { not: null } },
+      orderBy: { trashedAt: "desc" },
+      select: { id: true, trashedAt: true },
     }),
   ]);
 
@@ -348,6 +437,42 @@ export async function getTrash(boardId: string): Promise<TrashBundle> {
       title: d.title,
       trashedAt: d.trashedAt!.toISOString(),
     })),
+    notes: notes.map((note) => ({
+      type: "note" as const,
+      id: note.id,
+      title: note.text.trim() || "Note",
+      trashedAt: note.trashedAt!.toISOString(),
+    })),
+    links: links.map((link) => ({
+      type: "link" as const,
+      id: link.id,
+      title: link.title.trim() || link.url || "Link",
+      trashedAt: link.trashedAt!.toISOString(),
+    })),
+    arrows: arrows.map((arrow) => ({
+      type: "arrow" as const,
+      id: arrow.id,
+      title: "Arrow",
+      trashedAt: arrow.trashedAt!.toISOString(),
+    })),
+    headings: headings.map((heading) => ({
+      type: "heading" as const,
+      id: heading.id,
+      title: heading.text.trim() || "Heading",
+      trashedAt: heading.trashedAt!.toISOString(),
+    })),
+    files: files.map((file) => ({
+      type: "file" as const,
+      id: file.id,
+      title: file.name || "File",
+      trashedAt: file.trashedAt!.toISOString(),
+    })),
+    tables: tables.map((table) => ({
+      type: "table" as const,
+      id: table.id,
+      title: "Table",
+      trashedAt: table.trashedAt!.toISOString(),
+    })),
   };
 }
 
@@ -359,6 +484,12 @@ export async function trashItems(items: ItemRef[], boardId: string) {
   const cardIds = items.filter((i) => i.type === "card").map((i) => i.id);
   const drawingIds = items.filter((i) => i.type === "drawing").map((i) => i.id);
   const docIds = items.filter((i) => i.type === "document").map((i) => i.id);
+  const noteIds = items.filter((i) => i.type === "note").map((i) => i.id);
+  const linkIds = items.filter((i) => i.type === "link").map((i) => i.id);
+  const arrowIds = items.filter((i) => i.type === "arrow").map((i) => i.id);
+  const headingIds = items.filter((i) => i.type === "heading").map((i) => i.id);
+  const fileIds = items.filter((i) => i.type === "file").map((i) => i.id);
+  const tableIds = items.filter((i) => i.type === "table").map((i) => i.id);
 
   await prisma.$transaction([
     ...(listIds.length
@@ -389,6 +520,54 @@ export async function trashItems(items: ItemRef[], boardId: string) {
       ? [
           prisma.document.updateMany({
             where: { id: { in: docIds } },
+            data: { trashedAt: now },
+          }),
+        ]
+      : []),
+    ...(noteIds.length
+      ? [
+          prisma.note.updateMany({
+            where: { id: { in: noteIds } },
+            data: { trashedAt: now },
+          }),
+        ]
+      : []),
+    ...(linkIds.length
+      ? [
+          prisma.link.updateMany({
+            where: { id: { in: linkIds } },
+            data: { trashedAt: now },
+          }),
+        ]
+      : []),
+    ...(arrowIds.length
+      ? [
+          prisma.arrow.updateMany({
+            where: { id: { in: arrowIds } },
+            data: { trashedAt: now },
+          }),
+        ]
+      : []),
+    ...(headingIds.length
+      ? [
+          prisma.heading.updateMany({
+            where: { id: { in: headingIds } },
+            data: { trashedAt: now },
+          }),
+        ]
+      : []),
+    ...(fileIds.length
+      ? [
+          prisma.boardFile.updateMany({
+            where: { id: { in: fileIds } },
+            data: { trashedAt: now },
+          }),
+        ]
+      : []),
+    ...(tableIds.length
+      ? [
+          prisma.boardTable.updateMany({
+            where: { id: { in: tableIds } },
             data: { trashedAt: now },
           }),
         ]
@@ -405,6 +584,12 @@ export async function restoreItems(items: ItemRef[], boardId: string) {
   const cardIds = items.filter((i) => i.type === "card").map((i) => i.id);
   const drawingIds = items.filter((i) => i.type === "drawing").map((i) => i.id);
   const docIds = items.filter((i) => i.type === "document").map((i) => i.id);
+  const noteIds = items.filter((i) => i.type === "note").map((i) => i.id);
+  const linkIds = items.filter((i) => i.type === "link").map((i) => i.id);
+  const arrowIds = items.filter((i) => i.type === "arrow").map((i) => i.id);
+  const headingIds = items.filter((i) => i.type === "heading").map((i) => i.id);
+  const fileIds = items.filter((i) => i.type === "file").map((i) => i.id);
+  const tableIds = items.filter((i) => i.type === "table").map((i) => i.id);
 
   await prisma.$transaction([
     ...(listIds.length
@@ -439,6 +624,54 @@ export async function restoreItems(items: ItemRef[], boardId: string) {
           }),
         ]
       : []),
+    ...(noteIds.length
+      ? [
+          prisma.note.updateMany({
+            where: { id: { in: noteIds } },
+            data: { trashedAt: null },
+          }),
+        ]
+      : []),
+    ...(linkIds.length
+      ? [
+          prisma.link.updateMany({
+            where: { id: { in: linkIds } },
+            data: { trashedAt: null },
+          }),
+        ]
+      : []),
+    ...(arrowIds.length
+      ? [
+          prisma.arrow.updateMany({
+            where: { id: { in: arrowIds } },
+            data: { trashedAt: null },
+          }),
+        ]
+      : []),
+    ...(headingIds.length
+      ? [
+          prisma.heading.updateMany({
+            where: { id: { in: headingIds } },
+            data: { trashedAt: null },
+          }),
+        ]
+      : []),
+    ...(fileIds.length
+      ? [
+          prisma.boardFile.updateMany({
+            where: { id: { in: fileIds } },
+            data: { trashedAt: null },
+          }),
+        ]
+      : []),
+    ...(tableIds.length
+      ? [
+          prisma.boardTable.updateMany({
+            where: { id: { in: tableIds } },
+            data: { trashedAt: null },
+          }),
+        ]
+      : []),
   ]);
 
   revalidatePath(`/board/${boardId}`);
@@ -451,8 +684,14 @@ export async function purgeItems(items: ItemRef[], boardId: string) {
   const cardIds = items.filter((i) => i.type === "card").map((i) => i.id);
   const drawingIds = items.filter((i) => i.type === "drawing").map((i) => i.id);
   const docIds = items.filter((i) => i.type === "document").map((i) => i.id);
+  const noteIds = items.filter((i) => i.type === "note").map((i) => i.id);
+  const linkIds = items.filter((i) => i.type === "link").map((i) => i.id);
+  const arrowIds = items.filter((i) => i.type === "arrow").map((i) => i.id);
+  const headingIds = items.filter((i) => i.type === "heading").map((i) => i.id);
+  const fileIds = items.filter((i) => i.type === "file").map((i) => i.id);
+  const tableIds = items.filter((i) => i.type === "table").map((i) => i.id);
 
-  // Order: drawings → documents → cards → lists.
+  // Order: drawings → documents → notes → cards → lists.
   // Lists last so their cascade can't kill a card row we already removed.
   await prisma.$transaction([
     ...(drawingIds.length
@@ -461,6 +700,24 @@ export async function purgeItems(items: ItemRef[], boardId: string) {
     ...(docIds.length
       ? [prisma.document.deleteMany({ where: { id: { in: docIds } } })]
       : []),
+    ...(noteIds.length
+      ? [prisma.note.deleteMany({ where: { id: { in: noteIds } } })]
+      : []),
+    ...(linkIds.length
+      ? [prisma.link.deleteMany({ where: { id: { in: linkIds } } })]
+      : []),
+    ...(arrowIds.length
+      ? [prisma.arrow.deleteMany({ where: { id: { in: arrowIds } } })]
+      : []),
+    ...(headingIds.length
+      ? [prisma.heading.deleteMany({ where: { id: { in: headingIds } } })]
+      : []),
+    ...(fileIds.length
+      ? [prisma.boardFile.deleteMany({ where: { id: { in: fileIds } } })]
+      : []),
+    ...(tableIds.length
+      ? [prisma.boardTable.deleteMany({ where: { id: { in: tableIds } } })]
+      : []),
     ...(cardIds.length
       ? [prisma.card.deleteMany({ where: { id: { in: cardIds } } })]
       : []),
@@ -468,6 +725,8 @@ export async function purgeItems(items: ItemRef[], boardId: string) {
       ? [prisma.list.deleteMany({ where: { id: { in: listIds } } })]
       : []),
   ]);
+
+  await Promise.all(fileIds.map((id) => removeStoredFile(id)));
 
   revalidatePath(`/board/${boardId}`);
 }
@@ -494,6 +753,8 @@ export async function duplicateItems(items: ItemRef[], boardId: string) {
             boardId: src.boardId,
             x: src.x + 28,
             y: src.y + 28,
+            w: src.w,
+            h: src.h,
           },
         });
         for (let i = 0; i < src.cards.length; i++) {
@@ -501,6 +762,7 @@ export async function duplicateItems(items: ItemRef[], boardId: string) {
             data: {
               title: src.cards[i].title,
               description: src.cards[i].description,
+              image: src.cards[i].image,
               listId: copy.id,
               order: i,
             },
@@ -515,8 +777,9 @@ export async function duplicateItems(items: ItemRef[], boardId: string) {
         });
         await tx.card.create({
           data: {
-            title: `${src.title} (copy)`,
+            title: src.title ? `${src.title} (copy)` : src.title,
             description: src.description,
+            image: src.image,
             listId: src.listId,
             order: (maxOrder._max.order ?? -1) + 1,
           },
@@ -532,6 +795,99 @@ export async function duplicateItems(items: ItemRef[], boardId: string) {
             w: src.w,
             h: src.h,
             strokes: src.strokes,
+          },
+        });
+      } else if (item.type === "link") {
+        const src = await tx.link.findUnique({ where: { id: item.id } });
+        if (!src) continue;
+        await tx.link.create({
+          data: {
+            boardId: src.boardId,
+            url: src.url,
+            title: src.title,
+            description: src.description,
+            image: src.image,
+            icon: src.icon,
+            x: src.x + 28,
+            y: src.y + 28,
+            w: src.w,
+            h: src.h,
+          },
+        });
+      } else if (item.type === "arrow") {
+        const src = await tx.arrow.findUnique({ where: { id: item.id } });
+        if (!src) continue;
+        await tx.arrow.create({
+          data: {
+            boardId: src.boardId,
+            x1: src.x1 + 28,
+            y1: src.y1 + 28,
+            x2: src.x2 + 28,
+            y2: src.y2 + 28,
+            fromType: "",
+            fromId: "",
+            fromSide: "",
+            toType: "",
+            toId: "",
+            toSide: "",
+          },
+        });
+      } else if (item.type === "table") {
+        const src = await tx.boardTable.findUnique({ where: { id: item.id } });
+        if (!src) continue;
+        await tx.boardTable.create({
+          data: {
+            boardId: src.boardId,
+            x: src.x + 28,
+            y: src.y + 28,
+            cols: src.cols,
+            rows: src.rows,
+            cells: src.cells,
+          },
+        });
+      } else if (item.type === "file") {
+        const src = await tx.boardFile.findUnique({ where: { id: item.id } });
+        if (!src) continue;
+        const copy = await tx.boardFile.create({
+          data: {
+            boardId: src.boardId,
+            name: src.name,
+            mime: src.mime,
+            size: src.size,
+            kind: src.kind,
+            x: src.x + 28,
+            y: src.y + 28,
+          },
+        });
+        await copyStoredFile(src.id, copy.id);
+      } else if (item.type === "heading") {
+        const src = await tx.heading.findUnique({ where: { id: item.id } });
+        if (!src) continue;
+        await tx.heading.create({
+          data: {
+            boardId: src.boardId,
+            text: src.text,
+            x: src.x + 28,
+            y: src.y + 28,
+            w: src.w,
+            h: src.h,
+            fontSize: src.fontSize,
+            color: src.color,
+            bold: src.bold,
+            align: src.align,
+          },
+        });
+      } else if (item.type === "note") {
+        const src = await tx.note.findUnique({ where: { id: item.id } });
+        if (!src) continue;
+        await tx.note.create({
+          data: {
+            boardId: src.boardId,
+            text: src.text,
+            x: src.x + 28,
+            y: src.y + 28,
+            w: src.w,
+            h: src.h,
           },
         });
       } else {

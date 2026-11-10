@@ -3,17 +3,20 @@
 import { useDraggable } from "@dnd-kit/core";
 import { useState } from "react";
 import { renameBoard } from "@/app/actions";
-import {
-  IconDescription,
-  IconPencil,
-  IconPlus,
-} from "@/components/ui/Icons";
+import { IconDescription, IconPlus } from "@/components/ui/Icons";
 import {
   NEW_DOCUMENT_DRAG_ID,
   NEW_LIST_DRAG_ID,
 } from "@/components/Board/types/board";
 import { FormatToolbar } from "@/components/Board/components/document/FormatToolbar";
 import { useBoardTools } from "@/components/Board/components/document/boardTools";
+import { DrawButton } from "@/components/Board/components/draw/DrawButton";
+import { ArrowButton } from "@/components/Board/components/arrow/ArrowButton";
+import { LinkButton } from "@/components/Board/components/link/LinkButton";
+import { FileButton } from "@/components/Board/components/file/FileButton";
+import { HeadingButton } from "@/components/Board/components/heading/HeadingButton";
+import { TableButton } from "@/components/Board/components/table/TableButton";
+import { NoteButton } from "@/components/Board/components/note/NoteButton";
 import { TrashMenu } from "./TrashMenu";
 
 type Props = {
@@ -21,10 +24,10 @@ type Props = {
   title: string;
   addListOpen: boolean;
   onAddList: () => void;
-  onToggleDraw: () => void;
-  drawMode: boolean;
   refreshKey: number;
   documentOpen: boolean;
+  drawingOpen: boolean;
+  onUpload: (files: FileList) => void;
 };
 
 export function BoardHeader({
@@ -32,10 +35,10 @@ export function BoardHeader({
   title,
   addListOpen,
   onAddList,
-  onToggleDraw,
-  drawMode,
   refreshKey,
   documentOpen,
+  drawingOpen,
+  onUpload,
 }: Props) {
   const { setHost } = useBoardTools();
   const {
@@ -70,8 +73,11 @@ export function BoardHeader({
     void renameBoard(boardId, text);
   }
 
+  if (drawingOpen) return null;
+
   return (
     <div className="relative z-20 shrink-0 border-b border-ink/10 bg-paper">
+    {documentOpen ? null : (
     <div className="flex h-12 items-center gap-2 px-3 sm:px-6">
       <div className="flex min-w-0 items-center gap-2">
         {editing ? (
@@ -113,29 +119,13 @@ export function BoardHeader({
       </div>
 
       <div className="ml-auto flex items-center gap-2">
-        {/* Draw toggle */}
-        <button
-          type="button"
-          onClick={onToggleDraw}
-          aria-pressed={drawMode}
-          className={`
-            inline-flex h-9 items-center gap-1.5 rounded-lg px-3
-            text-sm font-medium shadow-sm transition-all duration-150
-            focus-visible:outline-none focus-visible:ring-2
-            focus-visible:ring-offset-2 active:scale-[0.98]
-            ${
-              drawMode
-                ? "bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500/40"
-                : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 focus-visible:ring-slate-900/30"
-            }
-          `}
-        >
-          <IconPencil size={15} />
-          <span>{drawMode ? "Drawing…" : "Draw"}</span>
-        </button>
-
-        {/* Trash */}
-        <TrashMenu boardId={boardId} refreshKey={refreshKey} />
+        <NoteButton />
+        <HeadingButton />
+        <TableButton />
+        <LinkButton />
+        <ArrowButton />
+        <FileButton onFiles={onUpload} />
+        <DrawButton />
 
         {/* Document — draggable */}
         <button
@@ -146,7 +136,7 @@ export function BoardHeader({
           aria-label="New document — drag onto the board"
           title="Drag onto the board to create a document"
           className="
-            group inline-flex h-9 items-center gap-1.5 rounded-lg
+            group inline-flex h-9 items-center gap-1.5
             bg-white px-3 text-slate-700 ring-1 ring-slate-200
             text-sm font-medium shadow-sm
             transition-all duration-150
@@ -175,11 +165,11 @@ export function BoardHeader({
           aria-label="Add list — click to name, or drag onto the board"
           title="Click to name, or drag onto the board"
           className="
-            group inline-flex h-9 items-center gap-1.5 rounded-lg
-            bg-slate-900 px-3
-            text-sm font-medium text-white shadow-sm
+            group inline-flex h-9 items-center gap-1.5
+            bg-white px-3 text-sm font-medium text-slate-700
+            shadow-sm ring-1 ring-slate-200
             transition-all duration-150
-            hover:bg-slate-800 hover:shadow
+            hover:bg-slate-50 hover:shadow
             active:scale-[0.98]
             focus-visible:outline-none focus-visible:ring-2
             focus-visible:ring-slate-900/30 focus-visible:ring-offset-2
@@ -196,12 +186,17 @@ export function BoardHeader({
           />
           <span>Add list</span>
         </button>
+
+        <TrashMenu boardId={boardId} refreshKey={refreshKey} />
       </div>
     </div>
-      <div className="ns-scroll flex min-h-11 items-center overflow-x-auto border-t border-ink/10 px-2 py-1 sm:px-4">
-        {documentOpen ? null : <FormatToolbar />}
-        <div ref={setHost} className="flex items-center" />
-      </div>
+    )}
+      {documentOpen ? (
+        <div className="ns-scroll flex min-h-11 items-center overflow-x-auto px-2 py-1 sm:px-4">
+          <FormatToolbar hint="Switch to Write to format text" />
+          <div ref={setHost} className="flex items-center" />
+        </div>
+      ) : null}
     </div>
   );
 }

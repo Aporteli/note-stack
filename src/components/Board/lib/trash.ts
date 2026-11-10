@@ -6,7 +6,11 @@ export function trashItemDetail(item: TrashItem): string {
       ? `Card in ${item.listTitle}`
       : item.type === "list"
         ? "List"
-        : "Drawing";
+        : item.type === "note"
+          ? "Note"
+          : item.type === "document"
+            ? "Document"
+            : "Drawing";
   return `${kind} · ${new Date(item.trashedAt).toLocaleDateString()}`;
 }
 

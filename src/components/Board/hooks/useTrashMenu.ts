@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getTrash, purgeItems, restoreItems } from "@/app/actions";
+import { showRemoved } from "@/components/Board/lib/keepRemoved";
 import { toItemRefs } from "@/components/Board/lib/trash";
 import type { ItemRef, TrashBundle, TrashItem } from "@/components/Board/types/board";
 import { itemKey } from "@/components/Board/types/board";
@@ -19,7 +20,18 @@ export function useTrashMenu(boardId: string, refreshKey: number) {
 
   const allItems: TrashItem[] = useMemo(() => {
     if (!bundle) return [];
-    return [...bundle.lists, ...bundle.cards, ...bundle.drawings];
+    return [
+      ...bundle.lists,
+      ...bundle.cards,
+      ...bundle.drawings,
+      ...bundle.documents,
+      ...bundle.notes,
+      ...bundle.links,
+      ...bundle.arrows,
+      ...bundle.headings,
+      ...bundle.files,
+      ...bundle.tables,
+    ];
   }, [bundle]);
 
   const total = allItems.length;
@@ -85,6 +97,7 @@ export function useTrashMenu(boardId: string, refreshKey: number) {
     setBusy(true);
     setError(null);
     try {
+      showRemoved(selectedItems.map((item) => item.id));
       await restoreItems(selectedItems, boardId);
       setSelected(new Set());
       await load();

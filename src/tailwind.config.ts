@@ -54,9 +54,9 @@ export default {
         hero: ["2.75rem", { lineHeight: "2.9rem", letterSpacing: "-0.03em" }],
       },
       borderRadius: {
-        card: "var(--r-card)",
-        panel: "var(--r-panel)",
-        pill: "var(--r-pill)",
+        card: "0px",
+        panel: "0px",
+        pill: "0px",
       },
       boxShadow: {
         "lift-1": "var(--lift-1)",

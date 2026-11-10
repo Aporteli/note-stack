@@ -5,6 +5,8 @@ export const MAX_OPTIONS = 6;
 
 export type QuizSort = "name" | "created" | "count";
 
+export const QUIZ_HOME_EVENT = "notestack-quiz-home";
+
 export function quizzesHere(
   quizzes: QuizListItem[],
   folderId: string | null,

@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/Button";
 import { IconTrash } from "@/components/ui/Icons";
 import type { QuizFolderData, QuizListItem } from "@/app/flash-cards/actions";
-import type { QuizSort } from "@/components/flash/lib/quizBoard";
 import { QuizCard } from "@/components/flash/quiz/QuizCard";
 import type { PointerEvent } from "react";
 
 type Props = {
   quizzes: QuizListItem[];
   folders: QuizFolderData[];
-  sort: QuizSort;
   selecting: boolean;
   selectedIds: string[];
   allSelected: boolean;
@@ -16,7 +14,6 @@ type Props = {
   pending: boolean;
   editingQuizId: string | null;
   quizDraft: string;
-  onSort: (sort: QuizSort) => void;
   onToggleAll: () => void;
   onBulkDelete: () => void;
   onDraft: (value: string) => void;
@@ -35,7 +32,6 @@ type Props = {
 export function QuizList({
   quizzes,
   folders,
-  sort,
   selecting,
   selectedIds,
   allSelected,
@@ -43,7 +39,6 @@ export function QuizList({
   pending,
   editingQuizId,
   quizDraft,
-  onSort,
   onToggleAll,
   onBulkDelete,
   onDraft,
@@ -60,18 +55,6 @@ export function QuizList({
 }: Props) {
   return (
     <>
-      <div className="flex justify-end">
-        <select
-          value={sort}
-          onChange={(event) => onSort(event.target.value as QuizSort)}
-          aria-label="Sort quizzes"
-          className="ns-field w-auto"
-        >
-          <option value="name">Alphabetical</option>
-          <option value="created">Date created</option>
-          <option value="count">Number of questions</option>
-        </select>
-      </div>
       <div className={`flex flex-wrap items-center justify-between gap-2 ${selecting ? "" : "hidden"}`}>
         <label className="inline-flex items-center gap-2 text-meta text-ink-soft">
           <input

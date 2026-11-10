@@ -21,7 +21,7 @@ export function DocumentModalHeader({
   onClose,
 }: Props) {
   return (
-    <header className="flex items-center gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
+    <header className="flex items-center gap-3 border-b border-slate-200 bg-slate-50 px-4 py-1">
       <IconDescription size={18} className="shrink-0 text-slate-500" />
       <input
         value={title}
@@ -30,18 +30,9 @@ export function DocumentModalHeader({
         className="min-w-0 flex-1 rounded-md border-0 bg-transparent px-1 text-lg font-semibold text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500/40 focus:outline-none"
       />
 
-      <div className="flex items-center gap-1 rounded-lg bg-white p-1 ring-1 ring-slate-200">
-        <TabButton active={tab === "write"} onClick={onWrite}>
-          <IconDescription size={14} /> Write
-        </TabButton>
-        <TabButton active={tab === "sketch"} onClick={onSketch}>
-          <IconPencil size={14} /> Sketch
-        </TabButton>
-      </div>
+     
 
-      <IconButton label="Close" onClick={onClose}>
-        <IconClose />
-      </IconButton>
+      
     </header>
   );
 }

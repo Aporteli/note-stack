@@ -108,7 +108,7 @@ export function useDocumentSketch(doc: DocumentData | null, onClose: () => void)
     return () => window.document.removeEventListener("keydown", onKey);
   }, [doc, onClose]);
 
-  function getLocalPoint(event: ReactPointerEvent): StrokePoint {
+  function getLocalPoint(event: { clientX: number; clientY: number }): StrokePoint {
     const svg = svgRef.current;
     if (!svg) return [0, 0];
     const rect = svg.getBoundingClientRect();
@@ -116,6 +116,21 @@ export function useDocumentSketch(doc: DocumentData | null, onClose: () => void)
     const scaleX = rect.width === 0 ? 1 : (vb.width || DOC_CANVAS_W) / rect.width;
     const scaleY = rect.height === 0 ? 1 : (vb.height || pageH) / rect.height;
     return [(event.clientX - rect.left) * scaleX, (event.clientY - rect.top) * scaleY];
+  }
+
+  function strokePoints(event: ReactPointerEvent): StrokePoint[] {
+    const native = event.nativeEvent;
+    const samples =
+      typeof native.getCoalescedEvents === "function" ? native.getCoalescedEvents() : [];
+    const events = samples.length > 0 ? samples : [native];
+    const points: StrokePoint[] = [];
+    for (const sample of events) {
+      const point = getLocalPoint(sample);
+      const prev = points[points.length - 1];
+      if (prev && prev[0] === point[0] && prev[1] === point[1]) continue;
+      points.push(point);
+    }
+    return points;
   }
 
   function handlePointerDown(event: ReactPointerEvent) {
@@ -159,23 +174,32 @@ export function useDocumentSketch(doc: DocumentData | null, onClose: () => void)
   function handlePointerMove(event: ReactPointerEvent) {
     const draft = draftRef.current;
     if (!draft) return;
-    const point = getLocalPoint(event);
+    const samples = strokePoints(event);
+    const point = samples[samples.length - 1];
+    if (!point) return;
     const active = toolRef.current;
 
     if (active === "eraser") {
       setStrokes((prev) => {
-        const next = eraseAt(prev, point[0], point[1], ERASER_RADIUS);
-        if (next.length !== prev.length) didErase.current = true;
+        let next = prev;
+        for (const sample of samples) {
+          const erased = eraseAt(next, sample[0], sample[1], ERASER_RADIUS);
+          if (erased.length !== next.length) didErase.current = true;
+          next = erased;
+        }
         return next;
       });
-      const next: Stroke = { ...draft, points: [...draft.points, point] };
+      const next: Stroke = { ...draft, points: [...draft.points, ...samples] };
       draftRef.current = next;
       setCurrent(next);
       return;
     }
 
     if (active === "pen") {
-      const next: Stroke = { ...draft, points: [...draft.points, point] };
+      const last = draft.points[draft.points.length - 1];
+      const added =
+        last && last[0] === samples[0][0] && last[1] === samples[0][1] ? samples.slice(1) : samples;
+      const next: Stroke = { ...draft, points: [...draft.points, ...added] };
       draftRef.current = next;
       setCurrent(next);
       return;

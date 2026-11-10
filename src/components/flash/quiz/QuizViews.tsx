@@ -21,7 +21,6 @@ export function QuizTakeView({
           All quizzes
         </button>
         <h2 className="font-display text-xl font-semibold text-ink">{quiz.title}</h2>
-        <p className="text-sm text-ink-soft">{quiz.topicName}</p>
       </div>
       <FlashQuiz questions={quiz.questions} />
     </div>

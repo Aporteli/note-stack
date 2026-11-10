@@ -1,0 +1,21 @@
+export const LINK_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS "Link" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "boardId" TEXT NOT NULL,
+  "url" TEXT NOT NULL DEFAULT '',
+  "title" TEXT NOT NULL DEFAULT '',
+  "description" TEXT NOT NULL DEFAULT '',
+  "image" TEXT NOT NULL DEFAULT '',
+  "icon" TEXT NOT NULL DEFAULT '',
+  "x" REAL NOT NULL,
+  "y" REAL NOT NULL,
+  "w" REAL NOT NULL DEFAULT 300,
+  "h" REAL NOT NULL DEFAULT 48,
+  "trashedAt" DATETIME,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Link_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "Link_boardId_idx" ON "Link"("boardId");
+CREATE INDEX IF NOT EXISTS "Link_boardId_trashedAt_idx" ON "Link"("boardId", "trashedAt");
+`;

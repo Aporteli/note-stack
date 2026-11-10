@@ -30,13 +30,13 @@ export async function getFlashTopics() {
     select: {
       id: true,
       name: true,
-      createdAt: true,
+      folderId: true,
       _count: { select: { cards: true } },
     },
   });
 }
 
-export async function createFlashTopic(name: string) {
+export async function createFlashTopic(name: string, folderId?: string | null) {
   const trimmed = name.trim();
   if (!trimmed) {
     return { ok: false as const, error: "Name the topic first." };
@@ -44,11 +44,118 @@ export async function createFlashTopic(name: string) {
 
   const userId = await ownerId();
   if (!userId) return { ok: false as const, error: SIGNED_OUT };
+  if (folderId) {
+    const folder = await prisma.flashFolder.findFirst({
+      where: { id: folderId, userId },
+      select: { id: true },
+    });
+    if (!folder) return { ok: false as const, error: "That group is no longer here." };
+  }
   const topic = await prisma.flashTopic.create({
-    data: { name: trimmed, userId },
+    data: { name: trimmed, userId, folderId: folderId || null },
   });
   revalidatePath(PATH);
   return { ok: true as const, id: topic.id };
+}
+
+export type FlashFolderData = {
+  id: string;
+  name: string;
+  parentId: string | null;
+};
+
+export async function getFlashFolders(): Promise<FlashFolderData[]> {
+  const userId = await ownerId();
+  if (!userId) return [];
+  return prisma.flashFolder.findMany({
+    where: { userId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, parentId: true },
+  });
+}
+
+export async function createFlashFolder(name: string, parentId: string | null) {
+  const trimmed = name.trim().slice(0, 80);
+  if (!trimmed) return { ok: false as const, error: "Name the group first." };
+  const userId = await ownerId();
+  if (!userId) return { ok: false as const, error: SIGNED_OUT };
+  if (parentId) {
+    const parent = await prisma.flashFolder.findFirst({
+      where: { id: parentId, userId },
+      select: { id: true },
+    });
+    if (!parent) return { ok: false as const, error: "That group is no longer here." };
+  }
+  const folder = await prisma.flashFolder.create({
+    data: { name: trimmed, userId, parentId },
+    select: { id: true },
+  });
+  revalidatePath(PATH);
+  return { ok: true as const, id: folder.id };
+}
+
+export async function renameFlashFolder(id: string, name: string) {
+  const trimmed = name.trim().slice(0, 80);
+  if (!id || !trimmed) return;
+  const userId = await ownerId();
+  if (!userId) return;
+  await prisma.flashFolder.updateMany({
+    where: { id, userId },
+    data: { name: trimmed },
+  });
+  revalidatePath(PATH);
+}
+
+export async function deleteFlashFolder(id: string) {
+  const userId = await ownerId();
+  if (!userId) return;
+  const folder = await prisma.flashFolder.findFirst({
+    where: { id, userId },
+    select: { parentId: true },
+  });
+  if (!folder) return;
+  await prisma.$transaction([
+    prisma.flashTopic.updateMany({
+      where: { userId, folderId: id },
+      data: { folderId: folder.parentId },
+    }),
+    prisma.flashFolder.updateMany({
+      where: { userId, parentId: id },
+      data: { parentId: folder.parentId },
+    }),
+    prisma.flashFolder.deleteMany({ where: { id, userId } }),
+  ]);
+  revalidatePath(PATH);
+}
+
+export async function renameFlashTopic(id: string, name: string) {
+  const trimmed = name.trim().slice(0, 120);
+  if (!id || !trimmed) return;
+  const userId = await ownerId();
+  if (!userId) return;
+  await prisma.flashTopic.updateMany({
+    where: { id, userId },
+    data: { name: trimmed },
+  });
+  revalidatePath(PATH);
+  revalidatePath(`${PATH}/${id}`);
+}
+
+export async function moveFlashTopic(id: string, folderId: string | null) {
+  const userId = await ownerId();
+  if (!userId) return;
+  if (folderId) {
+    const folder = await prisma.flashFolder.findFirst({
+      where: { id: folderId, userId },
+      select: { id: true },
+    });
+    if (!folder) return;
+  }
+  await prisma.flashTopic.updateMany({
+    where: { id, userId },
+    data: { folderId },
+  });
+  revalidatePath(PATH);
 }
 
 export async function deleteFlashTopic(id: string) {
@@ -199,17 +306,6 @@ const quizSelect = {
   },
 };
 
-export async function getQuizzes(topicId: string): Promise<QuizData[]> {
-  const user = { id: await ownerId() };
-  if (!user.id) return [];
-
-  return prisma.quiz.findMany({
-    where: { userId: user.id, topicId },
-    orderBy: { createdAt: "desc" },
-    select: quizSelect,
-  });
-}
-
 export type QuizFolderData = {
   id: string;
   name: string;
@@ -217,8 +313,6 @@ export type QuizFolderData = {
 };
 
 export type QuizListItem = QuizData & {
-  topicId: string;
-  topicName: string;
   folderId: string | null;
   createdAt: string;
 };
@@ -232,18 +326,14 @@ export async function getAllQuizzes(): Promise<QuizListItem[]> {
     orderBy: { createdAt: "desc" },
     select: {
       ...quizSelect,
-      topicId: true,
       folderId: true,
       createdAt: true,
-      topic: { select: { name: true } },
     },
   });
 
   return quizzes.map((quiz) => ({
     id: quiz.id,
     title: quiz.title,
-    topicId: quiz.topicId,
-    topicName: quiz.topic.name,
     folderId: quiz.folderId,
     createdAt: quiz.createdAt.toISOString(),
     questions: quiz.questions,
@@ -285,16 +375,10 @@ export async function renameQuiz(id: string, title: string) {
   if (!id || !trimmed) return;
   const userId = await ownerId();
   if (!userId) return;
-  const quiz = await prisma.quiz.findFirst({
-    where: { id, userId },
-    select: { topicId: true },
-  });
-  if (!quiz) return;
   await prisma.quiz.updateMany({
     where: { id, userId },
     data: { title: trimmed },
   });
-  revalidatePath(`${PATH}/${quiz.topicId}`);
   revalidatePath(QUIZZES_PATH);
 }
 
@@ -349,7 +433,7 @@ export async function moveQuizToFolder(id: string, folderId: string | null) {
   revalidatePath(QUIZZES_PATH);
 }
 
-export async function createQuiz(topicId: string, title: string, folderId: string | null = null) {
+export async function createQuiz(title: string, folderId: string | null = null) {
   const trimmed = title.trim();
   if (!trimmed) {
     return { ok: false as const, error: "Name the quiz first." };
@@ -357,13 +441,6 @@ export async function createQuiz(topicId: string, title: string, folderId: strin
 
   const userId = await ownerId();
   if (!userId) return { ok: false as const, error: SIGNED_OUT };
-  const topic = await prisma.flashTopic.findFirst({
-    where: { id: topicId, userId },
-    select: { id: true },
-  });
-  if (!topic) {
-    return { ok: false as const, error: "That topic is no longer here." };
-  }
 
   if (folderId) {
     const folder = await prisma.quizFolder.findFirst({
@@ -376,9 +453,8 @@ export async function createQuiz(topicId: string, title: string, folderId: strin
   }
 
   const quiz = await prisma.quiz.create({
-    data: { title: trimmed, topicId, userId, folderId },
+    data: { title: trimmed, userId, folderId },
   });
-  revalidatePath(`${PATH}/${topicId}`);
   revalidatePath(QUIZZES_PATH);
   return { ok: true as const, id: quiz.id };
 }
@@ -386,12 +462,7 @@ export async function createQuiz(topicId: string, title: string, folderId: strin
 export async function deleteQuiz(id: string) {
   const userId = await ownerId();
   if (!userId) return;
-  const quiz = await prisma.quiz.findFirst({
-    where: { id, userId },
-    select: { topicId: true },
-  });
   await prisma.quiz.deleteMany({ where: { id, userId } });
-  if (quiz) revalidatePath(`${PATH}/${quiz.topicId}`);
   revalidatePath(QUIZZES_PATH);
 }
 
@@ -401,16 +472,9 @@ export async function deleteQuizzes(ids: string[]) {
 
   const userId = await ownerId();
   if (!userId) return;
-  const quizzes = await prisma.quiz.findMany({
-    where: { id: { in: unique }, userId },
-    select: { topicId: true },
-  });
   await prisma.quiz.deleteMany({
     where: { id: { in: unique }, userId },
   });
-  for (const topicId of new Set(quizzes.map((quiz) => quiz.topicId))) {
-    revalidatePath(`${PATH}/${topicId}`);
-  }
   revalidatePath(QUIZZES_PATH);
 }
 
@@ -458,7 +522,7 @@ export async function addQuizQuestion(
   if (!userId) return { ok: false as const, error: SIGNED_OUT };
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId, userId },
-    select: { topicId: true, _count: { select: { questions: true } } },
+    select: { _count: { select: { questions: true } } },
   });
   if (!quiz) {
     return { ok: false as const, error: "That quiz is no longer here." };
@@ -478,7 +542,6 @@ export async function addQuizQuestion(
       },
     },
   });
-  revalidatePath(`${PATH}/${quiz.topicId}`);
   revalidatePath(QUIZZES_PATH);
   return { ok: true as const };
 }
@@ -491,7 +554,7 @@ export async function addQuizQuestions(
   if (!userId) return { ok: false as const, error: SIGNED_OUT };
   const quiz = await prisma.quiz.findFirst({
     where: { id: quizId, userId },
-    select: { topicId: true, _count: { select: { questions: true } } },
+    select: { _count: { select: { questions: true } } },
   });
   if (!quiz) {
     return { ok: false as const, error: "That quiz is no longer here." };
@@ -545,22 +608,57 @@ export async function addQuizQuestions(
     },
     { timeout: 20_000 },
   );
-  revalidatePath(`${PATH}/${quiz.topicId}`);
   revalidatePath(QUIZZES_PATH);
   return { ok: true as const, added: valid.length, skipped };
+}
+
+export async function updateQuizQuestion(
+  id: string,
+  prompt: string,
+  options: { text: string; correct: boolean }[],
+) {
+  const promptText = prompt.trim();
+  if (!promptText) {
+    return { ok: false as const, error: "Write the question." };
+  }
+  const cleaned = cleanOptions(options);
+  if (!cleaned.ok) return cleaned;
+
+  const userId = await ownerId();
+  if (!userId) return { ok: false as const, error: SIGNED_OUT };
+  const question = await prisma.quizQuestion.findFirst({
+    where: { id, quiz: { userId } },
+    select: { id: true },
+  });
+  if (!question) {
+    return { ok: false as const, error: "That question is no longer here." };
+  }
+
+  await prisma.$transaction([
+    prisma.quizQuestion.update({
+      where: { id: question.id },
+      data: { prompt: promptText },
+    }),
+    prisma.quizOption.deleteMany({ where: { questionId: question.id } }),
+    prisma.quizOption.createMany({
+      data: cleaned.options.map((option, index) => ({
+        text: option.text,
+        correct: option.correct,
+        questionId: question.id,
+        order: index,
+      })),
+    }),
+  ]);
+  revalidatePath(QUIZZES_PATH);
+  return { ok: true as const };
 }
 
 export async function deleteQuizQuestion(id: string) {
   const userId = await ownerId();
   if (!userId) return;
-  const question = await prisma.quizQuestion.findFirst({
-    where: { id, quiz: { userId } },
-    select: { quiz: { select: { topicId: true } } },
-  });
   await prisma.quizQuestion.deleteMany({
     where: { id, quiz: { userId } },
   });
-  if (question) revalidatePath(`${PATH}/${question.quiz.topicId}`);
   revalidatePath(QUIZZES_PATH);
 }
 
@@ -570,16 +668,9 @@ export async function deleteQuizQuestions(ids: string[]) {
 
   const userId = await ownerId();
   if (!userId) return;
-  const questions = await prisma.quizQuestion.findMany({
-    where: { id: { in: unique }, quiz: { userId } },
-    select: { quiz: { select: { topicId: true } } },
-  });
   await prisma.quizQuestion.deleteMany({
     where: { id: { in: unique }, quiz: { userId } },
   });
-  for (const topicId of new Set(questions.map((question) => question.quiz.topicId))) {
-    revalidatePath(`${PATH}/${topicId}`);
-  }
   revalidatePath(QUIZZES_PATH);
 }
 

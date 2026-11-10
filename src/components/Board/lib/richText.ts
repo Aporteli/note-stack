@@ -130,6 +130,22 @@ function safeFontFamily(value: string): string | null {
   return cleaned;
 }
 
+function safePx(value: string, min: number, max: number): string | null {
+  const match = /^(-?\d+(?:\.\d+)?)px$/.exec(value.trim());
+  if (!match) return null;
+  const size = Number(match[1]);
+  if (!Number.isFinite(size) || size < min || size > max) return null;
+  return `${Math.round(size)}px`;
+}
+
+function safeLineHeight(value: string): string | null {
+  const next = value.trim();
+  if (next === "normal") return next;
+  const size = Number(next);
+  if (!Number.isFinite(size) || size < 1 || size > 3) return null;
+  return String(Math.round(size * 100) / 100);
+}
+
 function safeAlign(value: string): string | null {
   const next = value.trim().toLowerCase();
   if (
@@ -167,6 +183,15 @@ function filterStyle(el: HTMLElement) {
     ) {
       safe = value;
     } else if (prop === "text-align") safe = safeAlign(value);
+    else if (prop === "line-height") safe = safeLineHeight(value);
+    else if (
+      prop === "margin-left" ||
+      prop === "margin-right" ||
+      prop === "padding-left" ||
+      prop === "padding-right"
+    ) {
+      safe = safePx(value, 0, 4000);
+    } else if (prop === "text-indent") safe = safePx(value, -2000, 4000);
     if (safe) kept.push(`${prop}: ${safe}`);
   }
   if (kept.length) el.setAttribute("style", kept.join("; "));
@@ -244,7 +269,49 @@ export function applyBlock(tag: "p" | "h1" | "h2" | "h3") {
   if (!wrapped) document.execCommand("formatBlock", false, tag);
 }
 
+function listItemFrom(node: Node | null): HTMLElement | null {
+  let el: Element | null = node instanceof Element ? node : node?.parentElement ?? null;
+  while (el) {
+    if (el instanceof HTMLLIElement) return el;
+    el = el.parentElement;
+  }
+  return null;
+}
+
+function listItemsInSelection(editor: HTMLElement): HTMLElement[] {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || !editor.contains(selection.anchorNode)) return [];
+  const range = selection.getRangeAt(0);
+  if (range.collapsed) {
+    const item = listItemFrom(selection.anchorNode);
+    return item && editor.contains(item) ? [item] : [];
+  }
+  return [...editor.querySelectorAll("li")].filter((node) => range.intersectsNode(node));
+}
+
+function clearNestedFontSize(item: HTMLElement) {
+  item.querySelectorAll<HTMLElement>("span, font").forEach((node) => {
+    node.style.fontSize = "";
+    node.removeAttribute("size");
+    if (!node.getAttribute("style")?.trim()) node.removeAttribute("style");
+  });
+}
+
 export function applyFontSize(editor: HTMLElement, px: number) {
+  const items = listItemsInSelection(editor);
+  if (items.length > 0) {
+    for (const item of items) {
+      item.style.fontSize = `${px}px`;
+      item.style.lineHeight = "1.45";
+      clearNestedFontSize(item);
+      const list = item.parentElement;
+      if (list instanceof HTMLElement && (list.tagName === "UL" || list.tagName === "OL")) {
+        list.style.paddingLeft = `${Math.max(24, Math.round(px * 1.35))}px`;
+      }
+    }
+    return;
+  }
+
   const before = new Set(editor.querySelectorAll("font, span"));
   document.execCommand("fontSize", false, "7");
   editor.querySelectorAll("font, span").forEach((node) => {

@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { mergeDocuments } from "@/components/Board/lib/document/mergeDocuments";
+import { noteRemoved, withoutPending } from "@/components/Board/lib/keepRemoved";
 import type {
   DocumentContent,
   DocumentData,
@@ -26,17 +29,26 @@ function parse(records: DocumentRecord[]): DocumentData[] {
       strokes: parsed.strokes,
       x: r.x,
       y: r.y,
+      z: r.z,
+      locked: r.locked,
     };
   });
 }
 
 export function useDocuments(initial: DocumentRecord[]) {
-  const [documents, setDocuments] = useState<DocumentData[]>(() =>
-    parse(initial),
-  );
+  const [documents, setDocumentsState] = useState<DocumentData[]>(() => parse(initial));
+
+  const setDocuments: Dispatch<SetStateAction<DocumentData[]>> = useCallback((action) => {
+    setDocumentsState((current) => {
+      const next = typeof action === "function" ? action(current) : action;
+      noteRemoved(current, next);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
-    setDocuments(parse(initial));
+    const incoming = parse(initial);
+    setDocumentsState((current) => withoutPending(mergeDocuments(current, incoming)));
   }, [initial]);
 
   return [documents, setDocuments] as const;

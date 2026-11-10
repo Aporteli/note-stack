@@ -86,7 +86,7 @@ export function SearchField({
       <input
         type="search"
         {...rest}
-        className={`ns-field pl-9 ${
+        className={`ns-field h-9 pl-9 ${
           onCanvas
             ? "border-white/25 bg-white/15 text-ink-invert placeholder:text-ink-invert/60 focus:border-white/60 focus:shadow-none"
             : ""

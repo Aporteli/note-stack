@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { mergeDrawings } from "@/components/Board/lib/draw/mergeDrawings";
 import type {
   DrawingData,
   DrawingRecord,
@@ -14,7 +15,7 @@ function parse(records: DrawingRecord[]): DrawingData[] {
     } catch {
       strokes = [];
     }
-    return { id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, strokes };
+    return { id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, z: r.z, locked: r.locked, strokes };
   });
 }
 
@@ -22,7 +23,7 @@ export function useDrawings(initial: DrawingRecord[]) {
   const [drawings, setDrawings] = useState<DrawingData[]>(() => parse(initial));
 
   useEffect(() => {
-    setDrawings(parse(initial));
+    setDrawings((current) => mergeDrawings(current, initial));
   }, [initial]);
 
   return [drawings, setDrawings] as const;

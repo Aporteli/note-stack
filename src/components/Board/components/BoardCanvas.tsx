@@ -6,6 +6,7 @@ type Props = {
   /** Ref forwarded to the inner canvas element — used for drop coordinate math. */
   canvasRef?: Ref<HTMLDivElement>;
   onBackgroundPointerDown?: () => void;
+  onFileDrop?: (files: File[], clientX: number, clientY: number) => void;
   children: ReactNode;
 };
 
@@ -14,6 +15,7 @@ export function BoardCanvas({
   height,
   canvasRef,
   onBackgroundPointerDown,
+  onFileDrop,
   children,
 }: Props) {
   return (
@@ -27,6 +29,15 @@ export function BoardCanvas({
             if (e.target === e.currentTarget) {
               onBackgroundPointerDown?.();
             }
+          }}
+          onDragOver={(event) => {
+            if (event.dataTransfer.types.includes("Files")) event.preventDefault();
+          }}
+          onDrop={(event) => {
+            const list = event.dataTransfer.files;
+            if (list.length === 0) return;
+            event.preventDefault();
+            onFileDrop?.(Array.from(list), event.clientX, event.clientY);
           }}
         >
           {/* Dot grid */}

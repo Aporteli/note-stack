@@ -7,15 +7,13 @@ import { QuizLibrary } from "@/components/flash/quiz/QuizLibrary";
 import { QuizOpening, QuizTakeView } from "@/components/flash/quiz/QuizViews";
 
 export function QuizBoard({
-  topics,
   quizzes,
   folders,
 }: {
-  topics: { id: string; name: string }[];
   quizzes: QuizListItem[];
   folders: QuizFolderData[];
 }) {
-  const board = useQuizBoard({ topics, quizzes, folders });
+  const board = useQuizBoard({ quizzes, folders });
 
   if (board.taking) {
     return <QuizTakeView quiz={board.taking} onBack={() => board.setTakingId(null)} />;

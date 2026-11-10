@@ -13,16 +13,19 @@ export function FlashDeck({
   topicId,
   topicName,
   cards,
+  backHref,
 }: {
   topicId: string;
   topicName: string;
   cards: FlashCardData[];
+  backHref: string;
 }) {
   const deck = useFlashDeck({ topicId, cards });
 
   return (
     <section className="flash-deck flex min-h-0 flex-1 flex-col" data-size={deck.textSize}>
       <FlashDeckHeader
+        backHref={backHref}
         topicName={topicName}
         cardCount={cards.length}
         visibleCount={deck.visible.length}

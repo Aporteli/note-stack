@@ -17,6 +17,7 @@ type Props = {
   onClear: () => void;
   onDiscard: () => void;
   onSave: () => void;
+  pinned?: boolean;
 };
 
 export function FreehandToolbar({
@@ -29,10 +30,23 @@ export function FreehandToolbar({
   onClear,
   onDiscard,
   onSave,
+  pinned = false,
 }: Props) {
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[100] flex justify-center px-4">
-      <div className="pointer-events-auto flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-2xl shadow-slate-900/10 backdrop-blur-md">
+    <div
+      className={
+        pinned
+          ? "flex shrink-0 justify-center border-t border-slate-200 bg-white px-4 py-3"
+          : "pointer-events-none fixed inset-x-0 bottom-4 z-[100] flex justify-center px-4"
+      }
+    >
+      <div
+        className={
+          pinned
+            ? "flex flex-wrap items-center gap-3"
+            : "pointer-events-auto flex flex-wrap items-center gap-3 border border-slate-200 bg-white/95 px-3 py-2 shadow-2xl shadow-slate-900/10 backdrop-blur-md"
+        }
+      >
         <div className="flex items-center gap-1">
           <ToolButton active={tool === "pencil"} label="Pencil" onClick={() => onTool("pencil")}>
             <IconPencil size={18} />

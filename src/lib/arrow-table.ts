@@ -1,0 +1,22 @@
+export const ARROW_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS "Arrow" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "boardId" TEXT NOT NULL,
+  "x1" REAL NOT NULL,
+  "y1" REAL NOT NULL,
+  "x2" REAL NOT NULL,
+  "y2" REAL NOT NULL,
+  "fromType" TEXT NOT NULL DEFAULT '',
+  "fromId" TEXT NOT NULL DEFAULT '',
+  "fromSide" TEXT NOT NULL DEFAULT '',
+  "toType" TEXT NOT NULL DEFAULT '',
+  "toId" TEXT NOT NULL DEFAULT '',
+  "toSide" TEXT NOT NULL DEFAULT '',
+  "trashedAt" DATETIME,
+  "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Arrow_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE INDEX IF NOT EXISTS "Arrow_boardId_idx" ON "Arrow"("boardId");
+CREATE INDEX IF NOT EXISTS "Arrow_boardId_trashedAt_idx" ON "Arrow"("boardId", "trashedAt");
+`;

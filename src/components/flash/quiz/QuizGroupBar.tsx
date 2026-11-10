@@ -1,7 +1,7 @@
-import type { FormEvent } from "react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Field";
-import { IconPlus } from "@/components/ui/Icons";
+import type { FormEvent } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Field';
+import { IconPlus } from '@/components/ui/Icons';
 
 type Crumb = { id: string | null; name: string };
 
@@ -14,24 +14,7 @@ export function QuizBreadcrumbs({
   folderId: string | null;
   onOpen: (id: string | null) => void;
 }) {
-  return (
-    <nav className="flex flex-wrap items-center gap-1 text-sm" aria-label="Quiz groups">
-      {crumbs.map((crumb, index) => (
-        <span key={crumb.id ?? "root"} className="inline-flex items-center gap-1">
-          {index > 0 ? <span className="text-ink-faint">/</span> : null}
-          <button
-            type="button"
-            onClick={() => onOpen(crumb.id)}
-            className={
-              crumb.id === folderId ? "font-semibold text-ink" : "text-ink-soft hover:text-ink"
-            }
-          >
-            {crumb.name}
-          </button>
-        </span>
-      ))}
-    </nav>
-  );
+  return <nav className="flex flex-wrap items-center gap-1 text-sm" aria-label="Quiz groups"></nav>;
 }
 
 export function QuizGroupForm({
@@ -50,21 +33,19 @@ export function QuizGroupForm({
   onSubmit: (event: FormEvent) => void;
 }) {
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-start">
-      <div className="min-w-0 flex-1">
-        <Input
-          value={name}
-          onChange={(event) => onName(event.target.value)}
-          placeholder={folderId ? "Name a subgroup" : "Name a group, for example Programming"}
-          aria-label="New group name"
-          invalid={Boolean(error)}
-        />
-        {error ? <p className="mt-1.5 text-meta text-danger">{error}</p> : null}
-      </div>
-      <Button type="submit" variant="secondary" loading={pending}>
-        {!pending && <IconPlus size={18} />}
+    <form onSubmit={onSubmit} className="flex w-full flex-wrap gap-2 sm:w-auto">
+      <Button type="submit" variant="primary" loading={pending} className="h-10 w-[130px]">
         {folderId ? "Add subgroup" : "Add group"}
       </Button>
+      <Input
+        value={name}
+        onChange={(event) => onName(event.target.value)}
+        placeholder={folderId ? "Name a subgroup" : "Name a group, for example Programming"}
+        aria-label="New group name"
+        invalid={Boolean(error)}
+        className="h-10 sm:w-64"
+      />
+      {error ? <p className="basis-full text-meta text-danger">{error}</p> : null}
     </form>
   );
 }

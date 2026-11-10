@@ -20,11 +20,23 @@ export function pointsToPath(points: StrokePoint[]): string {
     const [x, y] = points[0];
     return `M ${x} ${y} L ${x + 0.01} ${y}`;
   }
-  let d = `M ${points[0][0]} ${points[0][1]}`;
-  for (let i = 1; i < points.length; i++) {
-    d += ` L ${points[i][0]} ${points[i][1]}`;
+  if (points.length === 2) {
+    return `M ${points[0][0]} ${points[0][1]} L ${points[1][0]} ${points[1][1]}`;
   }
-  return d;
+
+  const mid = (a: StrokePoint, b: StrokePoint): StrokePoint => [
+    (a[0] + b[0]) / 2,
+    (a[1] + b[1]) / 2,
+  ];
+  const [sx, sy] = mid(points[0], points[1]);
+  let d = `M ${points[0][0]} ${points[0][1]} L ${sx} ${sy}`;
+  for (let i = 1; i < points.length - 1; i++) {
+    const [cx, cy] = points[i];
+    const [mx, my] = mid(points[i], points[i + 1]);
+    d += ` Q ${cx} ${cy} ${mx} ${my}`;
+  }
+  const last = points[points.length - 1];
+  return `${d} L ${last[0]} ${last[1]}`;
 }
 
 export function distToSegment(
@@ -93,7 +105,7 @@ export function hitsStroke(stroke: Stroke, x: number, y: number, radius: number)
 }
 
 export function eraseAt(strokes: Stroke[], x: number, y: number, radius: number): Stroke[] {
-  return strokes.filter((stroke) => !hitsStroke(stroke, x, y, radius));
+  return strokes.filter((stroke) => !hitsStroke(stroke, x, y, radius + stroke.width / 2));
 }
 
 export function constrainEnd(

@@ -35,6 +35,8 @@ export function useDocumentDrag({
       /* Shift is a selection gesture, not a drag.
          The canvas click handler owns the toggle. */
       if (shift || activeRef.current) return;
+      const origin = documents.find((doc) => doc.id === id);
+      if (!origin || origin.locked) return;
 
       const key = `document:${id}`;
       const wasSelected = selectedItemKeys.has(key);
@@ -46,7 +48,7 @@ export function useDocumentDrag({
 
       const startPositions = new Map<string, { x: number; y: number }>();
       for (const doc of documents) {
-        if (effectiveSelection.has(`document:${doc.id}`)) {
+        if (effectiveSelection.has(`document:${doc.id}`) && !doc.locked) {
           startPositions.set(doc.id, { x: doc.x, y: doc.y });
         }
       }

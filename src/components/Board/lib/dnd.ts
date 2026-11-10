@@ -1,3 +1,5 @@
+import { LIST_H, LIST_W } from "@/components/Board/lib/list/size";
+import { NOTE_H, NOTE_W } from "@/components/Board/lib/note/size";
 import type {
   DocumentData,
   DrawingData,
@@ -83,18 +85,21 @@ export function canvasBounds(
   drawings: DrawingData[] = [],
   documents: DocumentData[] = [],
   opts: BoundsOptions = {},
+  notes: { x: number; y: number; w?: number; h?: number }[] = [],
+  links: { x: number; y: number; w?: number; h?: number }[] = [],
+  arrows: { x1: number; y1: number; x2: number; y2: number }[] = [],
+  headings: { x: number; y: number; w?: number; h?: number }[] = [],
+  files: { x: number; y: number; kind?: string }[] = [],
+  boxes: { x: number; y: number; w: number; h: number }[] = [],
 ) {
-  const LIST_W = 296;
-  const LIST_H = 480;
-
   const { minWidth = 1200, minHeight = 800, pad = 240 } = opts;
 
   let maxX = minWidth;
   let maxY = minHeight;
 
   for (const list of lists) {
-    maxX = Math.max(maxX, list.x + LIST_W);
-    maxY = Math.max(maxY, list.y + LIST_H);
+    maxX = Math.max(maxX, list.x + (list.w || LIST_W));
+    maxY = Math.max(maxY, list.y + (list.h || LIST_H));
   }
   for (const d of drawings) {
     maxX = Math.max(maxX, d.x + d.w);
@@ -103,6 +108,30 @@ export function canvasBounds(
   for (const d of documents) {
     maxX = Math.max(maxX, d.x + DOC_CARD_W);
     maxY = Math.max(maxY, d.y + DOC_CARD_H);
+  }
+  for (const note of notes) {
+    maxX = Math.max(maxX, note.x + (note.w || NOTE_W));
+    maxY = Math.max(maxY, note.y + (note.h || NOTE_H));
+  }
+  for (const link of links) {
+    maxX = Math.max(maxX, link.x + (link.w || 300));
+    maxY = Math.max(maxY, link.y + (link.h || 48));
+  }
+  for (const arrow of arrows) {
+    maxX = Math.max(maxX, arrow.x1, arrow.x2);
+    maxY = Math.max(maxY, arrow.y1, arrow.y2);
+  }
+  for (const heading of headings) {
+    maxX = Math.max(maxX, heading.x + (heading.w || 640));
+    maxY = Math.max(maxY, heading.y + (heading.h || 96));
+  }
+  for (const file of files) {
+    maxX = Math.max(maxX, file.x + (file.kind === "video" ? 280 : 148));
+    maxY = Math.max(maxY, file.y + (file.kind === "audio" || file.kind === "video" ? 240 : 180));
+  }
+  for (const box of boxes) {
+    maxX = Math.max(maxX, box.x + box.w);
+    maxY = Math.max(maxY, box.y + box.h);
   }
 
   return { width: maxX + pad, height: maxY + pad };
